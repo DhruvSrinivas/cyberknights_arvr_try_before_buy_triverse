@@ -53,54 +53,37 @@ const REQUEST_TIMEOUT_MS = 10000;
 /**
  * getPrices(productName)
  *
- * PURPOSE:
- *   Searches for the product by name on each supported platform
- *   and returns price results as an array.
+ * Searches for the product by name on each supported platform
+ * and returns price results as a sorted array.
  *
- * WHAT TO IMPLEMENT:
- *   1. Build a search query from productName (URL-encode it)
- *   2. In parallel (Promise.allSettled), call a search function for each platform:
- *      - searchAmazon(productName)
- *      - searchFlipkart(productName)
- *   3. Collect fulfilled results; skip rejected ones (log the error)
- *   4. Sort results by price_inr ascending
- *   5. Return the sorted array
- *
- * NOTE ON PROMISE.ALLSETTLED vs PROMISE.ALL:
- *   Use Promise.allSettled — if Flipkart is down, you still return Amazon prices.
- *   Promise.all would fail the entire call if any one platform fails.
- *
- * EXAMPLE IMPLEMENTATION SKELETON:
- *
- *   const results = await Promise.allSettled([
- *     searchAmazon(productName),
- *     searchFlipkart(productName),
- *   ]);
- *
- *   const prices = results
- *     .filter(r => r.status === 'fulfilled')
- *     .map(r => r.value)
- *     .filter(Boolean); // remove nulls (platform found nothing)
- *
- *   return prices.sort((a, b) => a.price_inr - b.price_inr);
+ * Uses Promise.allSettled so that if one platform fails (e.g. Flipkart is
+ * down), we still return the results from the others.
  *
  * @param {string} productName - Product name to search for
- * @returns {Promise<Array>} - Array of price objects (see shape above)
+ * @returns {Promise<Array>} - Array of price objects sorted by price_inr asc
  */
 async function getPrices(productName) {
-  // Shoaib: implement platform search aggregation here
+  if (!productName || typeof productName !== 'string') {
+    return [];
+  }
 
-  /*
-   * PLACEHOLDER — returns an empty array so the file is importable.
-   * Shape of what each item should look like:
-   * {
-   *   platform:  "Amazon India",
-   *   price_inr: 24999,
-   *   url:       "https://www.amazon.in/s?k=Wakefit+Sofa",
-   *   in_stock:  true,
-   * }
-   */
-  return [];
+  const results = await Promise.allSettled([
+    searchAmazon(productName),
+    searchFlipkart(productName),
+  ]);
+
+  const prices = results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value)
+    .filter(Boolean); // remove nulls — platform returned no results
+
+  // Log any failures for debugging
+  results
+    .filter(r => r.status === 'rejected')
+    .forEach(r => console.error('[priceCompare] Platform search failed:', r.reason?.message));
+
+  // Sort ascending by price (lowest first)
+  return prices.sort((a, b) => a.price_inr - b.price_inr);
 }
 
 
@@ -111,45 +94,118 @@ async function getPrices(productName) {
 /**
  * searchAmazon(productName)
  *
- * WHAT TO IMPLEMENT:
- *   1. Build Amazon search URL:
- *      `https://www.amazon.in/s?k=${encodeURIComponent(productName)}`
- *   2. Fetch the search results page with axios
- *   3. Use Cheerio to find the first product result:
- *      - Result container selector: '[data-component-type="s-search-result"]'
- *      - Price: '.a-price-whole' (first one in the result)
- *      - Product link: '.a-link-normal.s-no-outline' attr('href')
- *      - In stock: check if price exists (no price usually means out of stock)
- *   4. Return a price object or null if no results found
+ * Searches Amazon India and returns the first result's price data.
  *
  * @param {string} productName
  * @returns {Promise<Object|null>}
  */
 async function searchAmazon(productName) {
-  // Shoaib: implement Amazon search here
+  const searchUrl = `https://www.amazon.in/s?k=${encodeURIComponent(productName)}`;
+
+  let res;
+  try {
+    res = await axios.get(searchUrl, {
+      headers: SCRAPE_HEADERS,
+      timeout: REQUEST_TIMEOUT_MS,
+    });
+  } catch (err) {
+    throw new Error(`Amazon search request failed: ${err.message}`);
+  }
+
+  const $ = cheerio.load(res.data);
+
+  // First search result container
+  const firstResult = $('[data-component-type="s-search-result"]').first();
+  if (!firstResult.length) {
+    // No results found for this query
+    return null;
+  }
+
+  // --- Price ---
+  const priceStr = firstResult.find('.a-price-whole').first().text().trim();
+  if (!priceStr) {
+    // No price means out of stock or sponsored/promoted with no price shown
+    return null;
+  }
+  const price_inr = parsePriceString(priceStr);
+
+  // --- Product link ---
+  let href = firstResult.find('a.a-link-normal.s-no-outline').attr('href') ||
+             firstResult.find('h2 a').attr('href') ||
+             '';
+  // Amazon hrefs can be relative (/dp/...) or absolute
+  const url = href.startsWith('http')
+    ? href
+    : `https://www.amazon.in${href}`;
+
+  return {
+    platform: SUPPORTED_PLATFORMS['amazon.in'], // "Amazon India"
+    price_inr,
+    url,
+    in_stock: price_inr > 0,
+  };
 }
 
 /**
  * searchFlipkart(productName)
  *
- * WHAT TO IMPLEMENT:
- *   1. Build Flipkart search URL:
- *      `https://www.flipkart.com/search?q=${encodeURIComponent(productName)}`
- *   2. Fetch the page and parse with Cheerio
- *   3. Find first result — Flipkart class names change, inspect manually:
- *      - Product card: '._1AtVbE' or '._2kHMtA' (verify in browser DevTools)
- *      - Price: '._30jeq3' or '._16Jk6d'
- *      - Link: 'a._1fQZEK' or 'a.s1Q9rs' — prefix with 'https://www.flipkart.com'
- *   4. Return a price object or null
- *
- * TIP: Flipkart blocks scraping more aggressively than Amazon.
- * Consider using the Flipkart affiliate API as a fallback (ask Dhruv for credentials).
+ * Searches Flipkart and returns the first result's price data.
+ * Note: Flipkart blocks scraping more aggressively — results may be unreliable.
+ * Consider using Flipkart Affiliate API as a fallback (ask Dhruv for credentials).
  *
  * @param {string} productName
  * @returns {Promise<Object|null>}
  */
 async function searchFlipkart(productName) {
-  // Shoaib: implement Flipkart search here
+  const searchUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(productName)}`;
+
+  let res;
+  try {
+    res = await axios.get(searchUrl, {
+      headers: SCRAPE_HEADERS,
+      timeout: REQUEST_TIMEOUT_MS,
+    });
+  } catch (err) {
+    throw new Error(`Flipkart search request failed: ${err.message}`);
+  }
+
+  const $ = cheerio.load(res.data);
+
+  // Flipkart search result cards — class names change often, try multiple selectors
+  const firstResult =
+    $('div._1AtVbE div._2kHMtA').first().parent() ||
+    $('div[data-id]').first();
+
+  // --- Price ---
+  // ._30jeq3 is the primary price class on search results
+  const priceStr =
+    $('div._30jeq3').first().text().trim() ||
+    $('div._25b18c ._30jeq3').first().text().trim() ||
+    '';
+
+  if (!priceStr) {
+    return null;
+  }
+  const price_inr = parsePriceString(priceStr);
+
+  // --- Product link ---
+  // First anchor inside a product card, prefixed with Flipkart domain
+  let href =
+    $('a._1fQZEK').first().attr('href') ||
+    $('a.s1Q9rs').first().attr('href')  ||
+    $('div._4rR01T a').first().attr('href') ||
+    $('a._2rpwqI').first().attr('href') ||
+    '';
+  const url = href
+    ? `https://www.flipkart.com${href}`
+    : searchUrl; // fallback to search page
+
+  return {
+    platform: SUPPORTED_PLATFORMS['flipkart.com'], // "Flipkart"
+    price_inr,
+    url,
+    in_stock: price_inr > 0,
+  };
 }
 
 
@@ -160,15 +216,25 @@ async function searchFlipkart(productName) {
 /**
  * parsePriceString(priceStr)
  *
- * Converts "₹24,999" or "24,999.00" to the number 24999.
- * Shoaib: use this in both searchAmazon and searchFlipkart.
+ * Converts "₹24,999" or "24,999.00" or "24999" to the number 24999.
  *
  * @param {string} priceStr
  * @returns {number}
  */
 function parsePriceString(priceStr) {
-  // Shoaib: implement — remove currency symbols, commas, then parseFloat
-  return 0; // placeholder
+  if (!priceStr) return 0;
+  // Step 1: Remove currency symbols (₹, Rs, INR) and whitespace
+  // Step 2: Remove commas used as thousands separators (NOT the decimal point)
+  // Step 3: Parse as float and round to nearest rupee
+  const cleaned = priceStr
+    .replace(/\bINR\b\s*/gi, '')     // strip "INR" + any trailing space
+    .replace(/Rs\.?\s*/gi, '')       // strip "Rs" / "Rs." + trailing space
+    .replace(/[₹]/g, '')            // strip ₹ symbol
+    .replace(/,(?=\d{3}(?!\d))/g, '') // remove thousands-separator commas
+    .replace(/\s+/g, '')            // remove all remaining whitespace
+    .trim();
+  const value = parseFloat(cleaned);
+  return isNaN(value) ? 0 : Math.round(value);
 }
 
 
