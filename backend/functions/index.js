@@ -239,12 +239,17 @@ exports.extractProduct = onRequest(
       const docId = md5(url.trim());
 
       try {
-        // ── Cache check ──────────────────────────────────────────────────────
-        const cached = await getCachedDoc(
-          FIRESTORE_COLLECTIONS.products,
-          docId,
-          CACHE_TTL_MS.product   // 24 hours
-        );
+        // ── Cache check (skip gracefully if Firestore is unavailable) ─────────
+        let cached = null;
+        try {
+          cached = await getCachedDoc(
+            FIRESTORE_COLLECTIONS.products,
+            docId,
+            CACHE_TTL_MS.product   // 24 hours
+          );
+        } catch (cacheErr) {
+          console.warn('[extractProduct] Firestore cache unavailable, skipping:', cacheErr.message);
+        }
 
         if (cached) {
           console.log(`[extractProduct] Cache HIT for ${url} (docId: ${docId})`);
@@ -256,9 +261,7 @@ exports.extractProduct = onRequest(
         // ── Scrape ────────────────────────────────────────────────────────────
         const product = await extractProductData(url.trim());
 
-        // ── Persist to Firestore ──────────────────────────────────────────────
-        // Store exactly the schema fields defined in the README.
-        // glbUrl is optional — extractor may not return it yet (Phase 2).
+        // ── Build doc ────────────────────────────────────────────────────────
         const doc = {
           name:          product.name          || '',
           platform:      product.platform      || '',
@@ -274,14 +277,16 @@ exports.extractProduct = onRequest(
           },
           glbUrl:     product.glbUrl     || '',
           productUrl: product.productUrl || url.trim(),
-          // fetchedAt is added by setCachedDoc via serverTimestamp()
         };
 
-        await setCachedDoc(FIRESTORE_COLLECTIONS.products, docId, doc);
+        // ── Persist to Firestore (skip gracefully if unavailable) ─────────────
+        try {
+          await setCachedDoc(FIRESTORE_COLLECTIONS.products, docId, doc);
+          console.log(`[extractProduct] Saved product "${doc.name}" to Firestore`);
+        } catch (saveErr) {
+          console.warn('[extractProduct] Could not save to Firestore cache:', saveErr.message);
+        }
 
-        console.log(`[extractProduct] Saved product "${doc.name}" to Firestore`);
-
-        // Return with fetchedAt as ISO string for clients that don't handle Timestamps
         return res.status(200).json({
           ...doc,
           fetchedAt: new Date().toISOString(),
@@ -372,12 +377,17 @@ exports.getPrices = onRequest(
       const docId = md5(cleanName);
 
       try {
-        // ── Cache check ──────────────────────────────────────────────────────
-        const cached = await getCachedDoc(
-          FIRESTORE_COLLECTIONS.prices,
-          docId,
-          CACHE_TTL_MS.prices   // 1 hour
-        );
+        // ── Cache check (skip gracefully if Firestore is unavailable) ─────────
+        let cached = null;
+        try {
+          cached = await getCachedDoc(
+            FIRESTORE_COLLECTIONS.prices,
+            docId,
+            CACHE_TTL_MS.prices   // 1 hour
+          );
+        } catch (cacheErr) {
+          console.warn('[getPrices] Firestore cache unavailable, skipping:', cacheErr.message);
+        }
 
         if (cached) {
           console.log(`[getPrices] Cache HIT for "${cleanName}" (docId: ${docId})`);
@@ -388,17 +398,15 @@ exports.getPrices = onRequest(
 
         // ── Fetch prices ─────────────────────────────────────────────────────
         const prices = await getPricesData(cleanName);
-
-        // Ensure we always store an array
         const safeResults = Array.isArray(prices) ? prices : [];
 
-        // ── Persist to Firestore ──────────────────────────────────────────────
-        await setCachedDoc(FIRESTORE_COLLECTIONS.prices, docId, {
-          results: safeResults,
-          // fetchedAt added by setCachedDoc
-        });
-
-        console.log(`[getPrices] Saved ${safeResults.length} price result(s) for "${cleanName}"`);
+        // ── Persist to Firestore (skip gracefully if unavailable) ─────────────
+        try {
+          await setCachedDoc(FIRESTORE_COLLECTIONS.prices, docId, { results: safeResults });
+          console.log(`[getPrices] Saved ${safeResults.length} price result(s) for "${cleanName}"`);
+        } catch (saveErr) {
+          console.warn('[getPrices] Could not save to Firestore cache:', saveErr.message);
+        }
 
         return res.status(200).json(safeResults);
 

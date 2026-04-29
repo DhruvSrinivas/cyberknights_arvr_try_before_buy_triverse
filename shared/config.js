@@ -25,8 +25,9 @@
 // In local development this is the emulator URL.
 // In production, replace with your actual Cloud Functions region URL.
 // Example prod URL: 'https://us-central1-triverse-xxxx.cloudfunctions.net'
+const isProd = (typeof process !== 'undefined') && process.env && (process.env.NODE_ENV === 'production');
 const API_BASE_URL =
-  process.env.NODE_ENV === 'production'
+  isProd
     ? 'https://us-central1-cyberknights-arvr.cloudfunctions.net'
     : 'http://127.0.0.1:5001/cyberknights-arvr/us-central1';
 
@@ -124,8 +125,12 @@ if (typeof module !== 'undefined' && module.exports) {
     FIRESTORE_COLLECTIONS,
     CACHE_TTL_MS,
   };
-} else {
-  // ES Module (browser — frontend, ar-engine)
-  // Nothing needed here; just use `export` at the top if this file is
-  // converted to ESM. For now, the globals above are accessible via <script> tag.
+} else if (typeof window !== 'undefined') {
+  // Browser (frontend, ar-engine) — attach as globals
+  window.API_BASE_URL          = API_BASE_URL;
+  window.FIREBASE_CONFIG       = FIREBASE_CONFIG;
+  window.SUPPORTED_PLATFORMS   = SUPPORTED_PLATFORMS;
+  window.PRODUCT_CATEGORIES    = PRODUCT_CATEGORIES;
+  window.FIRESTORE_COLLECTIONS = FIRESTORE_COLLECTIONS;
+  window.CACHE_TTL_MS          = CACHE_TTL_MS;
 }

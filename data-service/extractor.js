@@ -87,19 +87,38 @@ async function extractProduct(url) {
     throw new Error('Invalid URL: must be a non-empty string starting with http.');
   }
 
-  // 2. Parse hostname
-  let hostname;
+  // 2. Resolve short URLs (amzn.in, fkrt.it, etc.) by following redirects
+  let resolvedUrl = url;
   try {
-    hostname = new URL(url).hostname;
-  } catch {
-    throw new Error(`Malformed URL: ${url}`);
+    const headRes = await axios.head(url, {
+      headers: SCRAPE_HEADERS,
+      timeout: REQUEST_TIMEOUT_MS,
+      maxRedirects: 5,
+      validateStatus: () => true, // don't throw on any status
+    });
+    // axios.head follows redirects and exposes the final URL via responseURL
+    if (headRes.request && headRes.request.res && headRes.request.res.responseUrl) {
+      resolvedUrl = headRes.request.res.responseUrl;
+    } else if (headRes.config && headRes.config.url) {
+      resolvedUrl = headRes.config.url;
+    }
+  } catch (_) {
+    // If HEAD fails, fall through with original URL
   }
 
-  // 3. Route to the correct platform scraper
-  if (hostname.includes('amazon.in')) {
-    return await scrapeAmazon(url);
+  // 3. Parse hostname of resolved URL
+  let hostname;
+  try {
+    hostname = new URL(resolvedUrl).hostname;
+  } catch {
+    throw new Error(`Malformed URL: ${resolvedUrl}`);
+  }
+
+  // 4. Route to the correct platform scraper
+  if (hostname.includes('amazon.in') || hostname.includes('amazon.com')) {
+    return await scrapeAmazon(resolvedUrl);
   } else if (hostname.includes('flipkart.com')) {
-    return await scrapeFlipkart(url);
+    return await scrapeFlipkart(resolvedUrl);
   } else {
     throw new Error(`Unsupported platform: ${hostname}. Use Amazon.in or Flipkart.com`);
   }

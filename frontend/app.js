@@ -22,19 +22,11 @@
 // IMPORTS
 // ---------------------------------------------------------------------------
 
-/**
- * API_BASE_URL: The base URL for the Firebase Cloud Functions.
- * In local dev: http://127.0.0.1:5001/YOUR_PROJECT_ID/us-central1
- * In production: https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net
- * Value comes from shared/config.js — do NOT hardcode it here.
- */
-import { API_BASE_URL } from '../shared/config.js';
+// API_BASE_URL and PRODUCT_CATEGORIES come from shared/config.js loaded via <script> in index.html
+const { API_BASE_URL, PRODUCT_CATEGORIES } = window;
 
-/**
- * initARViewer: Atul's function. Injects <model-viewer> into a container div.
- * Signature: initARViewer(glbUrl: string, dimensions: object, containerId: string)
- * See ar-engine/README.md for full details.
- */
+// initARViewer is loaded as a module import below.
+// Using a module-level import so it resolves correctly relative to app.js.
 import { initARViewer } from '../ar-engine/ar-engine.js';
 
 
@@ -150,7 +142,15 @@ async function handleUrlSubmit(url) {
       body: JSON.stringify({ url })
     });
     
-    if (!extractRes.ok) throw new Error("Failed to fetch product data.");
+    if (!extractRes.ok) {
+      // Read the actual error message from the backend response
+      let errMsg = 'Failed to fetch product data.';
+      try {
+        const errBody = await extractRes.json();
+        if (errBody.error) errMsg = errBody.error;
+      } catch (_) {}
+      throw new Error(errMsg);
+    }
     const productData = await extractRes.json();
 
     if (productData.error) {

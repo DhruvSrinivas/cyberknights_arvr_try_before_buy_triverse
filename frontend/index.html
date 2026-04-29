@@ -172,6 +172,8 @@
     Loaded as a module so it can use ES module imports (import/export).
     Must be at the bottom of <body> so all DOM elements above are loaded first.
   ====================================================================== -->
+  <!-- shared/config.js must load before app.js — it populates window globals -->
+  <script src="../shared/config.js"></script>
   <script type="module" src="app.js"></script>
 
 </body>
