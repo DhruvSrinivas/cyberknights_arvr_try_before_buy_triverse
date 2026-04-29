@@ -7,7 +7,7 @@
   <meta name="description" content="Pick your room, set dimensions, choose your style — TRIVERSE recommends the perfect furniture and lets you see it in AR before you buy." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/frontend/styles.css" />
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 </head>
@@ -16,7 +16,7 @@
   <!-- NAV -->
   <nav class="navbar" id="navbar">
     <div class="navbar__logo">
-      <span class="navbar__logo-icon">⬡</span>
+      <span class="navbar__logo-mark">⬡</span>
       <span class="navbar__logo-text">TRIVERSE</span>
     </div>
     <p class="navbar__tagline">AR Home Décor · Try Before You Buy</p>
@@ -24,12 +24,19 @@
 
   <!-- HERO -->
   <section class="hero" id="hero">
-    <div class="hero__badge">✦ Powered by WebAR</div>
-    <h1 class="hero__title">Design Your Room.<br/><span class="hero__title--accent">See It In AR.</span></h1>
-    <p class="hero__subtitle">Pick your room type, enter dimensions, choose a style — and we'll recommend the perfect furniture you can visualize in your actual room.</p>
+    <div class="hero__eyebrow">✦ Powered by WebAR · ML Recommendations</div>
+    <h1 class="hero__title">Design Your Space.<br/><span class="hero__title--accent">See It In AR.</span></h1>
+    <p class="hero__subtitle">Pick your room, enter dimensions, choose a style — our ML engine finds the perfect furniture. Preview it in your actual room before you buy.</p>
     <button class="btn-primary btn-xl" id="start-btn" onclick="document.getElementById('wizard').scrollIntoView({behavior:'smooth'})">
-      Start Designing →
+      Start Designing <span class="btn-arrow">→</span>
     </button>
+    <div class="hero__features">
+      <span class="hero__feature">📐 Room Dimensions</span>
+      <span class="hero__feature-dot">·</span>
+      <span class="hero__feature">🎨 Style Match</span>
+      <span class="hero__feature-dot">·</span>
+      <span class="hero__feature">📱 AR Preview</span>
+    </div>
   </section>
 
   <!-- ================================================================
@@ -38,47 +45,70 @@
   <section class="wizard" id="wizard">
     <div class="wizard__header">
       <div class="wizard__steps">
-        <span class="wizard__step active" id="step-dot-1">1</span>
+        <div class="wizard__step-item">
+          <span class="wizard__step active" id="step-dot-1">1</span>
+          <span class="wizard__step-label">Room</span>
+        </div>
         <span class="wizard__step-line"></span>
-        <span class="wizard__step" id="step-dot-2">2</span>
+        <div class="wizard__step-item">
+          <span class="wizard__step" id="step-dot-2">2</span>
+          <span class="wizard__step-label">Size</span>
+        </div>
         <span class="wizard__step-line"></span>
-        <span class="wizard__step" id="step-dot-3">3</span>
+        <div class="wizard__step-item">
+          <span class="wizard__step" id="step-dot-3">3</span>
+          <span class="wizard__step-label">Style</span>
+        </div>
       </div>
     </div>
 
     <!-- STEP 1: Room Type -->
     <div class="wizard__panel active" id="step-1">
-      <h2 class="wizard__title">Which room are you designing?</h2>
-      <div class="room-grid" id="room-grid">
-        <!-- Filled by app.js -->
+      <div class="wizard__panel-header">
+        <h2 class="wizard__title">Which room are you designing?</h2>
+        <p class="wizard__subtitle">Select a space to get started</p>
       </div>
+      <div class="room-grid" id="room-grid"><!-- filled by app.js --></div>
     </div>
 
     <!-- STEP 2: Dimensions -->
     <div class="wizard__panel" id="step-2">
-      <h2 class="wizard__title">Room Dimensions</h2>
-      <p class="wizard__subtitle" id="room-label-display"></p>
+      <div class="wizard__panel-header">
+        <h2 class="wizard__title">Room Dimensions</h2>
+        <p class="wizard__subtitle" id="room-label-display"></p>
+      </div>
       <div class="dims-form">
         <div class="dims-form__field">
-          <label>Length (ft)</label>
-          <input type="number" id="dim-length" min="5" max="50" value="14" />
+          <label class="dims-form__label">Length</label>
+          <div class="dims-form__input-wrap">
+            <input type="number" id="dim-length" min="5" max="50" value="14" />
+            <span class="dims-form__suffix">ft</span>
+          </div>
           <span class="dims-form__unit" id="length-cm">426 cm</span>
         </div>
         <div class="dims-form__field">
-          <label>Width (ft)</label>
-          <input type="number" id="dim-width" min="5" max="50" value="12" />
+          <label class="dims-form__label">Width</label>
+          <div class="dims-form__input-wrap">
+            <input type="number" id="dim-width" min="5" max="50" value="12" />
+            <span class="dims-form__suffix">ft</span>
+          </div>
           <span class="dims-form__unit" id="width-cm">365 cm</span>
         </div>
         <div class="dims-form__field">
-          <label>Height (ft)</label>
-          <input type="number" id="dim-height" min="7" max="20" value="9" />
+          <label class="dims-form__label">Height</label>
+          <div class="dims-form__input-wrap">
+            <input type="number" id="dim-height" min="7" max="20" value="9" />
+            <span class="dims-form__suffix">ft</span>
+          </div>
           <span class="dims-form__unit" id="height-cm">274 cm</span>
         </div>
       </div>
       <div class="room-viz" id="room-viz">
+        <span class="room-viz__axis-label room-viz__axis-label--x" id="room-viz-label-x">14 ft</span>
         <div class="room-viz__box" id="room-viz-box">
           <span class="room-viz__label" id="room-viz-label">14 × 12 ft</span>
         </div>
+        <span class="room-viz__axis-label room-viz__axis-label--y" id="room-viz-label-y">12 ft</span>
       </div>
       <div class="wizard__nav">
         <button class="btn-secondary" onclick="goToStep(1)">← Back</button>
@@ -88,13 +118,16 @@
 
     <!-- STEP 3: Style + Budget -->
     <div class="wizard__panel" id="step-3">
-      <h2 class="wizard__title">Style &amp; Budget</h2>
+      <div class="wizard__panel-header">
+        <h2 class="wizard__title">Style & Budget</h2>
+        <p class="wizard__subtitle">Personalize your recommendations</p>
+      </div>
       <div class="style-section">
-        <p class="wizard__subtitle">Pick your aesthetic</p>
+        <p class="section-label">Aesthetic Preference</p>
         <div class="style-grid" id="style-grid"><!-- filled by app.js --></div>
       </div>
       <div class="budget-section">
-        <p class="wizard__subtitle">Budget range</p>
+        <p class="section-label">Budget Range</p>
         <div class="budget-grid" id="budget-grid"><!-- filled by app.js --></div>
       </div>
       <div class="wizard__nav">
@@ -107,11 +140,9 @@
     </div>
   </section>
 
-  <!-- ================================================================
-    ERROR
-  ================================================================ -->
+  <!-- ERROR -->
   <div id="error-message" class="error-message hidden" role="alert">
-    <span>⚠️</span>
+    <span class="error-message__icon">⚠</span>
     <span id="error-text"></span>
   </div>
 
@@ -120,8 +151,16 @@
   ================================================================ -->
   <section class="results hidden" id="results">
     <div class="results__header">
-      <h2 class="results__title" id="results-title">Top picks for your room</h2>
-      <p class="results__subtitle" id="results-subtitle"></p>
+      <div class="results__header-left">
+        <p class="results__eyebrow">ML Recommendations</p>
+        <h2 class="results__title" id="results-title">Top picks for your room</h2>
+        <p class="results__subtitle" id="results-subtitle"></p>
+      </div>
+      <div class="results__header-right">
+        <div class="results__pipeline" id="results-pipeline">
+          <!-- score pipeline injected by app.js -->
+        </div>
+      </div>
     </div>
     <div class="products-grid" id="products-grid">
       <!-- product cards injected by app.js -->
@@ -134,24 +173,63 @@
   <div class="ar-modal hidden" id="ar-modal">
     <div class="ar-modal__backdrop" onclick="closeARModal()"></div>
     <div class="ar-modal__panel">
+
+      <!-- Header -->
       <div class="ar-modal__header">
-        <h3 class="ar-modal__title" id="ar-modal-title">View in AR</h3>
-        <button class="ar-modal__close" onclick="closeARModal()">✕</button>
+        <div>
+          <p class="ar-modal__eyebrow">3D · AR Viewer</p>
+          <h3 class="ar-modal__title" id="ar-modal-title">View in AR</h3>
+        </div>
+        <button class="ar-modal__close" onclick="closeARModal()" aria-label="Close">✕</button>
       </div>
+
+      <!-- 3D Viewer -->
       <div class="ar-modal__viewer" id="ar-container">
-        <!-- model-viewer injected here by ar-engine.js -->
+        <!-- model-viewer injected here -->
       </div>
+
+      <!-- Color Picker -->
+      <div class="ar-color-picker" id="ar-color-picker">
+        <p class="ar-color-picker__label">Color Variant</p>
+        <div class="ar-color-picker__swatches" id="color-swatches">
+          <button class="color-swatch selected" data-color="natural"   data-filter="" title="Natural Wood" style="background:#C4A882;"></button>
+          <button class="color-swatch" data-color="charcoal"  data-filter="brightness(0.4) saturate(0)" title="Charcoal" style="background:#3D3D3D;"></button>
+          <button class="color-swatch" data-color="ocean"     data-filter="hue-rotate(200deg) saturate(1.4) brightness(0.8)" title="Ocean Blue" style="background:#2E4057;"></button>
+          <button class="color-swatch" data-color="forest"    data-filter="hue-rotate(100deg) saturate(1.2) brightness(0.75)" title="Forest Green" style="background:#2D6A4F;"></button>
+          <button class="color-swatch" data-color="rust"      data-filter="hue-rotate(340deg) saturate(1.5) brightness(0.8)" title="Terracotta" style="background:#C05A3A;"></button>
+          <button class="color-swatch" data-color="pearl"     data-filter="brightness(1.3) saturate(0.2)" title="Pearl White" style="background:#F0EDE8; border:1.5px solid #ccc;"></button>
+        </div>
+      </div>
+
+      <!-- Dimensions + Price -->
       <div class="ar-modal__info" id="ar-modal-info"></div>
-      <a class="btn-buy" id="ar-buy-btn" href="#" target="_blank" rel="noopener">🛒 Buy Now</a>
+
+      <!-- Actions -->
+      <div class="ar-modal__actions">
+        <a class="btn-buy" id="ar-buy-btn" href="#" target="_blank" rel="noopener">🛒 Buy Now</a>
+        <button class="btn-phone" id="ar-qr-btn" onclick="toggleQR()">📱 View on Phone</button>
+      </div>
+
+      <!-- QR Panel (hidden by default) -->
+      <div class="ar-qr-panel hidden" id="ar-qr-panel">
+        <p class="ar-qr-panel__label">Scan with your phone to view in AR</p>
+        <img class="ar-qr-panel__img" id="ar-qr-img" src="" alt="QR Code" />
+        <p class="ar-qr-panel__hint">Point your phone camera at the QR code → tap the link → place the model in your room</p>
+      </div>
+
     </div>
   </div>
 
   <!-- FOOTER -->
   <footer class="footer">
-    <p>TRIVERSE · Built by <strong>CyberKnights</strong> · Umar · Atul · Shoaib · Dhruv</p>
+    <div class="footer__inner">
+      <span class="footer__brand">⬡ TRIVERSE</span>
+      <span class="footer__divider">·</span>
+      <span>Built by <strong>CyberKnights</strong> — Umar · Atul · Shoaib · Dhruv</span>
+    </div>
   </footer>
 
-  <!-- Scripts: shared files load before app.js -->
+  <!-- Scripts -->
   <script src="/shared/config.js"></script>
   <script src="/shared/productCatalog.js"></script>
   <script src="/shared/roomPresets.js"></script>

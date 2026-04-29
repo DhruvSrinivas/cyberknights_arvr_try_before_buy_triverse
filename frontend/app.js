@@ -273,6 +273,21 @@ function displayRecommendations(products) {
   resultsTitle.textContent    = `Top picks for your ${roomLabel}`;
   resultsSubtitle.textContent = `${styleLabel} style · ${selectedBudget.label} · ${products.length} recommendations`;
 
+  // Update pipeline stats
+  const pipelineEl = document.getElementById('results-pipeline');
+  if (pipelineEl) {
+    pipelineEl.innerHTML = `
+      <div class="pipeline-stat">
+        <span class="pipeline-stat__value">${window.PRODUCT_CATALOG.length}</span>
+        <span class="pipeline-stat__label">Total Items</span>
+      </div>
+      <div class="pipeline-stat">
+        <span class="pipeline-stat__value">${products.length}</span>
+        <span class="pipeline-stat__label">Matches</span>
+      </div>
+    `;
+  }
+
   if (!products.length) {
     productsGrid.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;color:var(--text2);padding:40px;">
@@ -303,7 +318,7 @@ function buildProductCard(product, isBestMatch) {
 
   card.innerHTML = `
     <div class="product-card__img-wrap">
-      <img class="product-card__img" src="${product.imageUrl}" alt="${product.name}" loading="lazy" />
+      <img class="product-card__img" src="${product.imageUrl}" alt="${product.name}" loading="lazy" onerror="this.classList.add('error'); this.src='https://placehold.co/400x300/121d23/d7c9aa?text=Image+Unavailable';" />
       <span class="product-card__badge">${product.category}</span>
       ${isBestMatch ? '<span class="product-card__score">★ Best Match</span>' : `<span class="product-card__score">${scorePct}%</span>`}
     </div>
@@ -335,7 +350,10 @@ function buildProductCard(product, isBestMatch) {
 // AR MODAL
 // ---------------------------------------------------------------------------
 
+let currentARProduct = null;
+
 function openARModal(product) {
+  currentARProduct = product;
   arModalTitle.textContent = product.name;
   arModalInfo.textContent  = product.dimensions
     ? `📐 ${product.dimensions.lengthCm} × ${product.dimensions.widthCm} × ${product.dimensions.heightCm} cm`
@@ -346,6 +364,14 @@ function openARModal(product) {
   arModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
+  // Reset color picker
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  document.querySelector('.color-swatch[data-color="natural"]')?.classList.add('selected');
+
+  // Hide QR panel
+  const qrPanel = document.getElementById('ar-qr-panel');
+  if (qrPanel) qrPanel.classList.add('hidden');
+
   // Init the AR viewer
   initARViewer(product.glbUrl, product.dimensions, 'ar-container');
 }
@@ -354,6 +380,36 @@ window.closeARModal = function() {
   arModal.classList.add('hidden');
   document.body.style.overflow = '';
   arContainer.innerHTML = '';
+  currentARProduct = null;
+};
+
+// Handle Color Picker
+document.getElementById('color-swatches')?.addEventListener('click', (e) => {
+  if (e.target.classList.contains('color-swatch')) {
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    e.target.classList.add('selected');
+    
+    const filter = e.target.getAttribute('data-filter') || '';
+    const viewer = document.querySelector('model-viewer');
+    if (viewer) {
+      viewer.style.filter = filter;
+    }
+  }
+});
+
+// Handle QR Code
+window.toggleQR = function() {
+  const qrPanel = document.getElementById('ar-qr-panel');
+  const qrImg = document.getElementById('ar-qr-img');
+  
+  if (qrPanel.classList.contains('hidden')) {
+    qrPanel.classList.remove('hidden');
+    // Generate QR code pointing to a placeholder AR experience or the current URL
+    const currentUrl = encodeURIComponent(window.location.href);
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUrl}`;
+  } else {
+    qrPanel.classList.add('hidden');
+  }
 };
 
 // Close on Escape key
