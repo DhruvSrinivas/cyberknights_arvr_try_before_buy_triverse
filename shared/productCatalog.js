@@ -362,7 +362,7 @@ const PRODUCT_CATALOG = [
     styles: ['minimalist', 'scandinavian'],
     roomTypes: ['bedroom', 'study'],
     price_inr: 8999,                           // Under ₹10K tier
-    imageUrl: 'https://placehold.co/600x400/2D6A4F/FFFFFF?text=Studio+Sofa+Green',
+    imageUrl: 'https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/f542cfeb-d06a-5200-9e5b-b30d5f1be5ba/78b7eb7a-896e-57ff-b047-c69590dd28e7.jpg',
     glbUrl: SOFA_GLB,
     dimensions: { lengthCm: 130, widthCm: 75, heightCm: 82 },
     platform: 'Amazon',
@@ -379,7 +379,7 @@ const PRODUCT_CATALOG = [
     styles: ['scandinavian', 'minimalist'],
     roomTypes: ['living', 'bedroom'],
     price_inr: 8500,                           // Under ₹10K tier
-    imageUrl: 'https://placehold.co/600x400/C4A882/333333?text=Sheen+Accent+Chair+Natural',
+    imageUrl: 'https://st.perplexity.ai/estatic/0b226c450798410ac541646c86ec31afd840e5beab817a5d84fa821e7db61981ec84c3b4a3f072a7a2e1899c9fb06c6e14881e95fcf8ecf031ffeb2ba6af56e26edd57cd450e80160d5b3e98d4bf16de1c90d2efe1dc71a787fc1e5f27a72c2f',
     glbUrl: CHAIR_GLB,
     dimensions: { lengthCm: 70, widthCm: 70, heightCm: 85 },
     platform: 'Flipkart',
@@ -480,7 +480,7 @@ const PRODUCT_CATALOG = [
     styles: ['bohemian', 'traditional'],
     roomTypes: ['bedroom', 'study', 'dining'],
     price_inr: 2800,                           // Under ₹10K tier
-    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Table+Lamp+Teal',
+    imageUrl: 'https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/c3ee0bed-a522-52b2-8763-84e2fe2618a2/e28f74cd-ba3a-5947-9062-83fbbc349a80.jpg',
     glbUrl: LAMP_GLB,
     dimensions: { lengthCm: 25, widthCm: 25, heightCm: 55 },
     platform: 'Amazon',
@@ -581,7 +581,7 @@ const PRODUCT_CATALOG = [
     styles: ['minimalist', 'modern', 'industrial'],
     roomTypes: ['study', 'bedroom'],
     price_inr: 6200,                           // Under ₹10K tier
-    imageUrl: 'https://placehold.co/600x400/6B8089/FFFFFF?text=Ergonomic+Study+Chair',
+    imageUrl: 'https://d2u1z1lopyfwlx.cloudfront.net/thumbnails/8f41745a-281b-57b8-b5ce-5f10ce207f9e/bb512499-3026-538a-95b6-d7c8b94da3e2.jpg',
     glbUrl: CHAIR_GLB,
     dimensions: { lengthCm: 65, widthCm: 65, heightCm: 95 },
     platform: 'Flipkart',
