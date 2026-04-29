@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>TRIVERSE — See It In Your Room Before You Buy</title>
+  <meta name="description" content="Paste any Amazon or Flipkart home décor product link and see it in your room using WebAR before you buy. Compare prices across platforms instantly." />
+
+  <!-- Umar: Link your stylesheet here -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!--
+    model-viewer CDN — loaded here so AR works across the app.
+    Do NOT move this to ar-engine.js; it must be in the HTML <head>.
+    Version: pin this to a specific version in production to avoid breaking changes.
+  -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+</head>
+<body>
+
+  <!-- =====================================================================
+    NAVBAR
+    Umar: Style with .navbar class.
+    Keep the logo text "TRIVERSE" — it's the brand name.
+    The nav links are placeholders for Phase 4 (About, How It Works).
+  ====================================================================== -->
+  <nav class="navbar">
+    <div class="navbar__logo">
+      <span class="navbar__logo-text">TRIVERSE</span>
+      <span class="navbar__logo-tagline">Try Before You Buy</span>
+    </div>
+    <ul class="navbar__links">
+      <!-- Umar: add nav links here in Phase 4 -->
+    </ul>
+  </nav>
+
+  <!-- =====================================================================
+    HERO SECTION
+    Umar: The main headline and subtext. Style with .hero class.
+    This section sits above the URL input bar.
+  ====================================================================== -->
+  <section class="hero">
+    <h1 class="hero__title">See It In Your Room Before You Buy</h1>
+    <p class="hero__subtitle">
+      Paste any Amazon or Flipkart home décor link. We'll load it in AR and
+      compare prices across platforms — instantly.
+    </p>
+
+    <!-- =================================================================
+      URL INPUT BAR
+      Umar: This is the core input. Style with .url-input class.
+      - #url-input is the <input> element app.js reads from
+      - #analyze-btn triggers handleUrlSubmit() in app.js
+      The event listener is wired in app.js — do NOT add onclick here.
+    ================================================================== -->
+    <div class="url-input">
+      <input
+        type="url"
+        id="url-input"
+        class="url-input__field"
+        placeholder="Paste Amazon or Flipkart product link here…"
+        aria-label="Product URL"
+        autocomplete="off"
+      />
+      <button id="analyze-btn" class="btn-primary" type="button">
+        Analyze Product
+      </button>
+    </div>
+
+    <!-- Supported platforms hint — Umar: style with .url-input__hint -->
+    <p class="url-input__hint">
+      Supports: <strong>amazon.in</strong> · <strong>flipkart.com</strong>
+    </p>
+  </section>
+
+  <!-- =====================================================================
+    LOADING SPINNER
+    Umar: Show this while any API call is in progress.
+    app.js toggles the .hidden class on this element.
+    Default state: hidden.
+  ====================================================================== -->
+  <div id="loading-spinner" class="spinner hidden" aria-live="polite" aria-label="Loading">
+    <!-- Umar: Add spinner animation markup here (CSS-only is fine) -->
+    <div class="spinner__circle"></div>
+    <p class="spinner__text">Fetching product data…</p>
+  </div>
+
+  <!-- =====================================================================
+    ERROR MESSAGE
+    Umar: Displays when extractProduct or getPrices fails.
+    app.js sets the text content and removes .hidden.
+    Default state: hidden.
+  ====================================================================== -->
+  <div id="error-message" class="error-message hidden" role="alert">
+    <span class="error-message__icon">⚠️</span>
+    <span id="error-text" class="error-message__text">
+      <!-- app.js fills this text dynamically -->
+    </span>
+  </div>
+
+  <!-- =====================================================================
+    PRODUCT CARD
+    Umar: Rendered by displayProduct() in app.js after a successful fetch.
+    app.js populates all child elements via DOM manipulation.
+    Default state: hidden (app.js removes .hidden when data arrives).
+
+    Child elements app.js will populate:
+    - #product-name    → product.name
+    - #product-image   → product.imageUrl (as <img> src)
+    - #product-price   → product.originalPrice (formatted as ₹XX,XXX)
+    - #product-category → product.category (as a badge)
+    - #product-platform → product.platform
+    - #product-dimensions → product.dimensions.raw
+    - #view-ar-btn     → triggers initARViewer() call in app.js
+  ====================================================================== -->
+  <section id="product-card" class="product-card hidden">
+    <div class="product-card__image-wrapper">
+      <img id="product-image" class="product-card__image" src="" alt="Product image" />
+    </div>
+    <div class="product-card__details">
+      <span id="product-category" class="product-card__category-badge">
+        <!-- e.g. "Sofa" -->
+      </span>
+      <h2 id="product-name" class="product-card__name">
+        <!-- Product name goes here -->
+      </h2>
+      <p id="product-platform" class="product-card__platform">
+        <!-- e.g. "Found on Amazon India" -->
+      </p>
+      <p id="product-price" class="product-card__price">
+        <!-- e.g. "₹24,999" -->
+      </p>
+      <p id="product-dimensions" class="product-card__dimensions">
+        <!-- e.g. "210 × 85 × 90 cm (L × W × H)" -->
+      </p>
+
+      <!-- View in AR button -->
+      <button id="view-ar-btn" class="btn-ar" type="button">
+        📱 View in Your Room (AR)
+      </button>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+    PRICE COMPARISON PANEL
+    Umar: Rendered by displayPrices() in app.js after the prices API call.
+    app.js injects price rows as child elements inside #price-list.
+    Default state: hidden.
+
+    Each price row shape (app.js builds these):
+    { platform: string, price_inr: number, url: string, in_stock: boolean }
+  ====================================================================== -->
+  <section id="price-panel" class="price-panel hidden">
+    <h3 class="price-panel__title">Price Comparison</h3>
+    <ul id="price-list" class="price-panel__list">
+      <!-- app.js dynamically injects <li> elements here.
+           Each <li> should show: platform name, price in ₹, "In Stock" / "Out of Stock", "Buy Now" link -->
+    </ul>
+  </section>
+
+  <!-- =====================================================================
+    AR CONTAINER
+    Atul: This is where initARViewer() from ar-engine.js injects the
+    <model-viewer> element. Do NOT put anything inside this div by hand.
+    Umar: Style the wrapper with .ar-container class.
+    Default state: hidden (app.js removes .hidden when AR is ready).
+  ====================================================================== -->
+  <div id="ar-container" class="ar-container hidden">
+    <!-- ar-engine.js injects <model-viewer> here at runtime -->
+  </div>
+
+  <!-- =====================================================================
+    FOOTER
+    Umar: Simple footer with team credit and project name.
+  ====================================================================== -->
+  <footer class="footer">
+    <p class="footer__text">
+      TRIVERSE · Built by <strong>CyberKnights</strong> · Umar · Atul · Shoaib · Dhruv
+    </p>
+  </footer>
+
+  <!-- =====================================================================
+    APP SCRIPT
+    Loaded as a module so it can use ES module imports (import/export).
+    Must be at the bottom of <body> so all DOM elements above are loaded first.
+  ====================================================================== -->
+  <script type="module" src="app.js"></script>
+
+</body>
+</html>

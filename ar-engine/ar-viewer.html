@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRIVERSE AR Engine — Local Test Page</title>
+  <meta name="description" content="Atul's standalone test page for the TRIVERSE WebAR model viewer. Not for production use." />
+
+  <style>
+    /* Minimal styling for the test page only — Atul can change this freely */
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    h1 { margin-bottom: 0.5rem; font-size: 1.5rem; }
+    p  { color: #aaa; margin-bottom: 1.5rem; font-size: 0.9rem; }
+
+    /* model-viewer element dimensions */
+    model-viewer {
+      width: 100%;
+      max-width: 700px;
+      height: 500px;
+      background: #0d0d1a;
+      border-radius: 12px;
+      border: 1px solid #333;
+    }
+
+    .controls {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background: #2a2a4e;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 200ms;
+    }
+    button:hover { background: #3a3a6e; }
+
+    .info {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #0d0d1a;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #aaa;
+      max-width: 700px;
+      width: 100%;
+    }
+    .info code { color: #7c9ef8; }
+  </style>
+
+  <!--
+    model-viewer Web Component — loaded from CDN.
+    Atul: pin to a specific version for stability.
+    Docs: https://modelviewer.dev/
+  -->
+  <script type="module"
+    src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js">
+  </script>
+</head>
+<body>
+
+  <h1>🪑 TRIVERSE AR Engine — Test Page</h1>
+  <p>
+    Atul's local test sandbox. Use this page to test GLB loading + AR mode.<br/>
+    This page is NOT linked from the main frontend — it's for AR engine dev only.
+  </p>
+
+  <!--
+    HARDCODED TEST MODEL
+    Atul: This uses a placeholder GLB from modelviewer.dev for testing.
+    Replace `src` with a real furniture GLB URL when you have one.
+    Good free sources: https://sketchfab.com, https://poly.pizza, https://modelviewer.dev/examples/
+
+    KEY ATTRIBUTES:
+    - `ar`               : enables the AR button on supported devices
+    - `ar-modes`         : WebXR → Scene Viewer → Quick Look (fallback order)
+    - `camera-controls`  : allows user to rotate/zoom in 3D view
+    - `auto-rotate`      : model slowly spins on load
+    - `shadow-intensity` : floor shadow under the model (0 = none, 1 = full)
+    - `exposure`         : lighting intensity
+    - `alt`              : accessibility description
+
+    Atul: When initARViewer() is implemented in ar-engine.js, it will
+    dynamically create an element like this and inject it into #ar-container.
+    Use this hardcoded version to understand the attributes before coding.
+  -->
+  <model-viewer
+    id="test-model-viewer"
+    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+    alt="Test 3D model — placeholder astronaut (replace with furniture GLB)"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    auto-rotate
+    shadow-intensity="1"
+    exposure="1"
+  >
+    <!--
+      AR button slot — this button appears on the model-viewer when AR is available.
+      Atul: you can customize the AR button appearance here.
+      On desktop (AR not available), this slot is hidden automatically.
+    -->
+    <button slot="ar-button" id="ar-toggle-btn">
+      📱 View in Your Room (AR)
+    </button>
+  </model-viewer>
+
+
+  <!--
+    MANUAL CONTROLS
+    Atul: Use these buttons to test different behaviors during development.
+    These are test-only and won't appear in the real frontend.
+  -->
+  <div class="controls">
+
+    <button id="btn-test-sofa" onclick="loadTestModel('https://modelviewer.dev/shared-assets/models/Astronaut.glb', 'Placeholder Sofa')">
+      Load Sofa Model
+    </button>
+
+    <button id="btn-toggle-rotate" onclick="toggleAutoRotate()">
+      Toggle Auto-Rotate
+    </button>
+
+    <button id="btn-reset-camera" onclick="document.getElementById('test-model-viewer').cameraOrbit = 'auto auto auto'">
+      Reset Camera
+    </button>
+
+    <button id="btn-toggle-ar" onclick="document.getElementById('test-model-viewer').activateAR()">
+      Activate AR (Android only)
+    </button>
+
+  </div>
+
+
+  <div class="info">
+    <strong>Test Notes for Atul:</strong><br/>
+    • AR mode requires <code>HTTPS</code> or <code>localhost</code> on Android Chrome.<br/>
+    • On desktop, the "Activate AR" button will show a "not supported" message — that's expected.<br/>
+    • To test on a real device: run <code>npx serve . --listen 3000</code> in this folder,
+      then open your phone's Chrome to <code>http://YOUR_LOCAL_IP:3000/ar-viewer.html</code>.<br/>
+    • Or use ngrok: <code>ngrok http 3000</code> for an HTTPS tunnel.<br/>
+    • Replace the placeholder GLB with a real furniture model when ready.<br/>
+    • The <code>scale</code> attribute can be set to match real dimensions:
+      <code>scale="2.1 0.9 0.85"</code> for a 210cm × 90cm × 85cm sofa (in meters).
+  </div>
+
+
+  <script>
+    /**
+     * loadTestModel — Atul's test utility.
+     * Swaps the model-viewer src to test a different GLB.
+     * Not used in production.
+     */
+    function loadTestModel(glbUrl, label) {
+      const viewer = document.getElementById('test-model-viewer');
+      viewer.src = glbUrl;
+      viewer.alt = label;
+      console.log('[AR Test] Loaded model:', glbUrl);
+    }
+
+    /**
+     * toggleAutoRotate — toggles the auto-rotate attribute.
+     */
+    function toggleAutoRotate() {
+      const viewer = document.getElementById('test-model-viewer');
+      if (viewer.hasAttribute('auto-rotate')) {
+        viewer.removeAttribute('auto-rotate');
+        console.log('[AR Test] Auto-rotate OFF');
+      } else {
+        viewer.setAttribute('auto-rotate', '');
+        console.log('[AR Test] Auto-rotate ON');
+      }
+    }
+
+    // Log when model loads successfully
+    document.getElementById('test-model-viewer').addEventListener('load', () => {
+      console.log('[AR Test] Model loaded successfully.');
+    });
+
+    // Log AR errors
+    document.getElementById('test-model-viewer').addEventListener('ar-status', (e) => {
+      console.log('[AR Test] AR status:', e.detail.status);
+    });
+  </script>
+
+</body>
+</html>

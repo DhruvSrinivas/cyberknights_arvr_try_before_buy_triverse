@@ -1,0 +1,193 @@
+/**
+ * frontend/styles.css — TRIVERSE Design System
+ * OWNER: Umar
+ *
+ * STRUCTURE:
+ * 1. CSS Custom Properties (Design Tokens)
+ * 2. Base Reset
+ * 3. Utility Classes
+ * 4. Component Skeletons (fill these in)
+ * 5. Responsive Breakpoints
+ */
+
+/* ==========================================================================
+   1. CSS CUSTOM PROPERTIES
+   ========================================================================== */
+:root {
+  /* Colors — Umar: replace these placeholder comments with real values */
+  --color-primary:       /* Main CTA color (buttons, links) — e.g. #6C63FF */;
+  --color-primary-hover: /* Darker primary for hover */;
+  --color-surface:       /* Card/panel background — e.g. #1E1E2E */;
+  --color-surface-alt:   /* Secondary surface — e.g. #2A2A3E */;
+  --color-bg:            /* Page background — e.g. #13131F */;
+  --color-border:        /* Subtle borders — e.g. #3A3A5C */;
+  --color-text:          /* Primary text — e.g. #EEEEF2 */;
+  --color-text-muted:    /* Secondary text — e.g. #9999BB */;
+  --color-error:         /* Error state — e.g. #FF5370 */;
+  --color-success:       /* Success / in-stock — e.g. #5CF19E */;
+  --color-warning:       /* Warning / out-of-stock — e.g. #FFCB6B */;
+
+  /* Typography — Umar: import a Google Font (e.g. Inter, Outfit) */
+  --font-body:    /* e.g. 'Inter', system-ui, sans-serif */;
+  --font-heading: /* same as body or a display font */;
+  --font-mono:    /* e.g. 'JetBrains Mono', monospace (for prices) */;
+
+  /* Spacing (8px base grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Border Radius */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-sm: /* e.g. 0 1px 3px rgba(0,0,0,0.3) */;
+  --shadow-md: /* e.g. 0 4px 16px rgba(0,0,0,0.4) */;
+  --shadow-lg: /* elevated shadow */;
+
+  /* Transitions */
+  --transition-fast:   150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow:   400ms ease;
+
+  /* Layout */
+  --max-width: 900px;
+}
+
+
+/* ==========================================================================
+   2. BASE RESET
+   Do NOT modify this section.
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); line-height: 1.6; min-height: 100vh; }
+img { max-width: 100%; display: block; }
+ul { list-style: none; }
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; border: none; font-family: inherit; }
+
+
+/* ==========================================================================
+   3. UTILITY CLASSES
+   ========================================================================== */
+
+/* .hidden — toggled by app.js. DO NOT CHANGE display value. */
+.hidden { display: none !important; }
+
+/* .container — centers content */
+.container { max-width: var(--max-width); margin: 0 auto; padding: 0 var(--space-5); }
+
+
+/* ==========================================================================
+   4. COMPONENT SKELETONS — Umar: fill in each block
+   ========================================================================== */
+
+/* NAVBAR
+   Fixed top bar. Logo on left. Links on right.
+   Suggested: blurred glass background (backdrop-filter: blur).
+   ------------------------------------ */
+.navbar {}
+.navbar__logo {}
+.navbar__logo-text {}
+.navbar__logo-tagline {}
+.navbar__links {}
+
+/* HERO
+   Above-the-fold section. Centered content. Generous padding.
+   Title: large gradient text. Subtitle: muted, smaller.
+   ------------------------------------ */
+.hero {}
+.hero__title {}
+.hero__subtitle {}
+
+/* URL INPUT
+   Input + button side by side. Border + focus glow on the group.
+   Mobile: stack vertically.
+   ------------------------------------ */
+.url-input {}
+.url-input__field {}
+.url-input__hint {}
+
+/* BUTTONS */
+.btn-primary {}
+.btn-primary:hover {}
+.btn-primary:active {}
+.btn-ar {}
+.btn-ar:hover {}
+
+/* LOADING SPINNER
+   Shown during API calls (#loading-spinner). CSS-only animation preferred.
+   ------------------------------------ */
+.spinner {}
+.spinner__circle {}
+.spinner__text {}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ERROR MESSAGE
+   Inline alert below the input bar. Red/rose color.
+   ------------------------------------ */
+.error-message {}
+.error-message__icon {}
+.error-message__text {}
+
+/* PRODUCT CARD
+   Image left, details right. Card surface, shadow, border-radius.
+   Mobile: image on top, details below.
+   ------------------------------------ */
+.product-card {}
+.product-card__image-wrapper {}
+.product-card__image {}
+.product-card__details {}
+.product-card__category-badge {}
+.product-card__name {}
+.product-card__platform {}
+.product-card__price {}  /* Use --font-mono for the price number */
+.product-card__dimensions {}
+
+/* PRICE PANEL
+   List of platform price rows.
+   .price-panel__item--best: highlight the lowest price.
+   ------------------------------------ */
+.price-panel {}
+.price-panel__title {}
+.price-panel__list {}
+.price-panel__item {}
+.price-panel__item--best {}
+
+/* AR CONTAINER
+   Wrapper for the injected <model-viewer> element.
+   Must have a defined height (min 400px) for model-viewer to render.
+   ------------------------------------ */
+.ar-container {}
+
+/* FOOTER */
+.footer {}
+.footer__text {}
+
+
+/* ==========================================================================
+   5. RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+/* Tablet */
+@media (max-width: 768px) {
+  /* Umar: stack product card columns, etc. */
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  /* Umar: reduce font sizes, tighten spacing */
+}
