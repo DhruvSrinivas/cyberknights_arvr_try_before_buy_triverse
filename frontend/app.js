@@ -260,12 +260,13 @@ async function handleRecommend() {
       if (p.price_inr <= budget) score += 0.3;
       
       let aiText = "";
+      const scorePct = Math.round(score * 100);
       if (p.category === 'furniture') {
-        aiText = `This ${p.name} maximizes your ${Math.floor(lengthCm/30.48)}x${Math.floor(widthCm/30.48)}ft space while preserving a clean ${selectedStyle} aesthetic.`;
-      } else if (p.category === 'plants') {
-        aiText = `Adding a ${p.name} brings life to your ${selectedRoom.id} and complements the ${selectedStyle} vibe naturally.`;
+        aiText = `Our spatial analysis engine matched this ${p.name} with your ${Math.floor(lengthCm/30.48)}x${Math.floor(widthCm/30.48)}ft room. The piece optimizes walking paths while anchoring your ${selectedStyle} decor perfectly.`;
+      } else if (p.category === 'lighting') {
+        aiText = `Based on your ${selectedRoom.id} profile, the ${p.name} will provide optimal ambient illumination and acts as a striking ${selectedStyle} statement piece.`;
       } else {
-        aiText = `The ${p.name} provides the perfect finishing touch to your ${selectedStyle} room without overwhelming the space.`;
+        aiText = `The ${p.name} was selected by our styling algorithm to introduce texture and personality to your ${selectedStyle} space without adding visual clutter.`;
       }
       
       return { ...p, _score: score, _rank: idx, aiJustification: aiText };
