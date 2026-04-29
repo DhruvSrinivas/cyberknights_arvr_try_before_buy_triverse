@@ -41,8 +41,6 @@ const axios   = require('axios');   // HTTP client — npm install axios
 const cheerio = require('cheerio'); // HTML parser — npm install cheerio
 
 // Shared config — for SUPPORTED_PLATFORMS and PRODUCT_CATEGORIES
-// Shoaib: use SUPPORTED_PLATFORMS to validate URLs, and PRODUCT_CATEGORIES
-// to map the detected category to the correct config key.
 const { SUPPORTED_PLATFORMS, PRODUCT_CATEGORIES } = require('../shared/config.js');
 
 
@@ -53,7 +51,6 @@ const { SUPPORTED_PLATFORMS, PRODUCT_CATEGORIES } = require('../shared/config.js
 /**
  * HTTP headers to send with every scraping request.
  * A realistic User-Agent is critical — without it, Amazon returns 503.
- * Shoaib: update USER_AGENT if requests start failing.
  */
 const SCRAPE_HEADERS = {
   'User-Agent':
@@ -76,59 +73,36 @@ const REQUEST_TIMEOUT_MS = 10000;
 /**
  * extractProduct(url)
  *
- * PURPOSE:
- *   Entry point for product extraction.
- *   Detects the platform from the URL, routes to the correct scraper,
- *   and returns a structured product object.
- *
- * WHAT TO IMPLEMENT:
- *   1. Validate the URL (not empty, is a string, starts with http)
- *   2. Parse the URL to get the hostname: new URL(url).hostname
- *   3. Detect platform:
- *      - If hostname includes 'amazon.in' → call scrapeAmazon(url)
- *      - If hostname includes 'flipkart.com' → call scrapeFlipkart(url)
- *      - Otherwise → throw new Error(`Unsupported platform: ${hostname}`)
- *   4. Return the result from the platform-specific scraper
+ * Entry point for product extraction.
+ * Detects the platform from the URL, routes to the correct scraper,
+ * and returns a structured product object.
  *
  * @param {string} url - Amazon.in or Flipkart.com product URL
  * @returns {Promise<Object>} - Structured product object (see shape above)
  * @throws {Error} - If URL is invalid, platform unsupported, or scraping fails
  */
 async function extractProduct(url) {
-  // Shoaib: implement platform detection and routing here
+  // 1. Validate the URL
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    throw new Error('Invalid URL: must be a non-empty string starting with http.');
+  }
 
-  /*
-   * PLACEHOLDER:
-   * Platform detection example:
-   *
-   *   const hostname = new URL(url).hostname;
-   *
-   *   if (hostname.includes('amazon.in')) {
-   *     return await scrapeAmazon(url);
-   *   } else if (hostname.includes('flipkart.com')) {
-   *     return await scrapeFlipkart(url);
-   *   } else {
-   *     throw new Error(`Unsupported platform. Use Amazon.in or Flipkart.com`);
-   *   }
-   */
+  // 2. Parse hostname
+  let hostname;
+  try {
+    hostname = new URL(url).hostname;
+  } catch {
+    throw new Error(`Malformed URL: ${url}`);
+  }
 
-  // Return empty shape so the file is importable without crashing (Phase 1)
-  return {
-    name:          '',
-    platform:      '',
-    originalPrice: 0,
-    currency:      'INR',
-    imageUrl:      '',
-    category:      '',
-    dimensions: {
-      raw:      '',
-      lengthCm: 0,
-      widthCm:  0,
-      heightCm: 0,
-    },
-    productUrl: url,
-    fetchedAt:  new Date().toISOString(),
-  };
+  // 3. Route to the correct platform scraper
+  if (hostname.includes('amazon.in')) {
+    return await scrapeAmazon(url);
+  } else if (hostname.includes('flipkart.com')) {
+    return await scrapeFlipkart(url);
+  } else {
+    throw new Error(`Unsupported platform: ${hostname}. Use Amazon.in or Flipkart.com`);
+  }
 }
 
 
@@ -139,34 +113,168 @@ async function extractProduct(url) {
 /**
  * scrapeAmazon(url)
  *
- * WHAT TO IMPLEMENT:
- *   1. Fetch HTML: const res = await axios.get(url, { headers: SCRAPE_HEADERS, timeout: REQUEST_TIMEOUT_MS })
- *   2. Load into Cheerio: const $ = cheerio.load(res.data)
- *   3. Extract fields using CSS selectors (see data-service/README.md for selectors)
- *   4. Parse price string to a number: remove '₹', commas → parseFloat()
- *   5. Parse dimensions string → call parseDimensions(rawDimStr)
- *   6. Detect category → call detectCategory(productName)
- *   7. Get GLB URL from PRODUCT_CATEGORIES[category].defaultGlbUrl
- *   8. Return structured product object
+ * Fetches and parses an Amazon India product page.
  *
  * @param {string} url
  * @returns {Promise<Object>}
  */
 async function scrapeAmazon(url) {
-  // Shoaib: implement Amazon scraping here
+  let res;
+  try {
+    res = await axios.get(url, {
+      headers: SCRAPE_HEADERS,
+      timeout: REQUEST_TIMEOUT_MS,
+    });
+  } catch (err) {
+    throw new Error(`Failed to fetch Amazon page: ${err.message}`);
+  }
+
+  const $ = cheerio.load(res.data);
+
+  // --- Product name ---
+  const name = $('#productTitle').text().trim();
+  if (!name) {
+    throw new Error('Could not extract product name. Amazon may have blocked the request or the page structure changed.');
+  }
+
+  // --- Price ---
+  // Primary: .a-price-whole (e.g. "24,999")
+  // Fallback: #priceblock_ourprice, #priceblock_dealprice
+  let priceStr =
+    $('.a-price-whole').first().text().trim() ||
+    $('#priceblock_ourprice').text().trim() ||
+    $('#priceblock_dealprice').text().trim() ||
+    '';
+  const originalPrice = parsePriceString(priceStr);
+
+  // --- Main image ---
+  // Try the main high-res image first, fall back to thumbnail
+  const imageUrl =
+    $('#imgTagWrappingLink img').attr('src') ||
+    $('#landingImage').attr('src') ||
+    $('#main-image').attr('src') ||
+    '';
+
+  // --- Dimensions ---
+  // Amazon stores product details in a tech spec table
+  let rawDimStr = '';
+  $('#productDetails_techSpec_section_1 tr, #productDetails_db_sections tr, #detailBullets_feature_div li').each((_, el) => {
+    const text = $(el).text();
+    if (/dimensions|size/i.test(text)) {
+      // Extract the value cell
+      rawDimStr = $(el).find('td').text().trim() ||
+                  text.replace(/.*dimensions.*?:/i, '').trim();
+      return false; // break
+    }
+  });
+
+  // Also try the feature bullets (some listings put dimensions there)
+  if (!rawDimStr) {
+    $('#feature-bullets li').each((_, el) => {
+      const text = $(el).text();
+      if (/dimensions|size/i.test(text)) {
+        rawDimStr = text.trim();
+        return false;
+      }
+    });
+  }
+
+  const dimensions = parseDimensions(rawDimStr);
+
+  // --- Category ---
+  const category = detectCategory(name);
+
+  // --- Build result ---
+  return {
+    name,
+    platform: SUPPORTED_PLATFORMS['amazon.in'],
+    originalPrice,
+    currency: 'INR',
+    imageUrl,
+    category,
+    dimensions,
+    productUrl: url,
+    fetchedAt: new Date().toISOString(),
+  };
 }
 
 /**
  * scrapeFlipkart(url)
  *
- * Same structure as scrapeAmazon — just different CSS selectors.
- * See data-service/README.md for Flipkart selectors.
+ * Fetches and parses a Flipkart product page.
+ * Note: Flipkart changes class names frequently — selectors may need updating.
  *
  * @param {string} url
  * @returns {Promise<Object>}
  */
 async function scrapeFlipkart(url) {
-  // Shoaib: implement Flipkart scraping here
+  let res;
+  try {
+    res = await axios.get(url, {
+      headers: SCRAPE_HEADERS,
+      timeout: REQUEST_TIMEOUT_MS,
+    });
+  } catch (err) {
+    throw new Error(`Failed to fetch Flipkart page: ${err.message}`);
+  }
+
+  const $ = cheerio.load(res.data);
+
+  // --- Product name ---
+  // Flipkart class names: ._35KyD6 or .B_NuCI or h1.yhB1nd
+  const name =
+    $('h1._35KyD6').text().trim() ||
+    $('h1.B_NuCI').text().trim()  ||
+    $('h1.yhB1nd').text().trim()  ||
+    $('span.B_NuCI').text().trim() ||
+    '';
+  if (!name) {
+    throw new Error('Could not extract product name from Flipkart. The page structure may have changed.');
+  }
+
+  // --- Price ---
+  // ._30jeq3 (most product pages) or ._16Jk6d (some variants)
+  const priceStr =
+    $('div._30jeq3').first().text().trim() ||
+    $('div._16Jk6d').first().text().trim() ||
+    '';
+  const originalPrice = parsePriceString(priceStr);
+
+  // --- Main image ---
+  // ._396cs4 img or .CXW8mj img
+  const imageUrl =
+    $('div._396cs4 img').attr('src') ||
+    $('div.CXW8mj img').attr('src') ||
+    $('img._396cs4').attr('src')    ||
+    '';
+
+  // --- Dimensions ---
+  let rawDimStr = '';
+  // Flipkart spec table rows
+  $('table._14cfVK tr, div._3npa0d, div.RmoJPd').each((_, el) => {
+    const text = $(el).text();
+    if (/dimensions|size/i.test(text)) {
+      rawDimStr = $(el).find('td').last().text().trim() || text.trim();
+      return false;
+    }
+  });
+
+  const dimensions = parseDimensions(rawDimStr);
+
+  // --- Category ---
+  const category = detectCategory(name);
+
+  return {
+    name,
+    platform: SUPPORTED_PLATFORMS['flipkart.com'],
+    originalPrice,
+    currency: 'INR',
+    imageUrl,
+    category,
+    dimensions,
+    productUrl: url,
+    fetchedAt: new Date().toISOString(),
+  };
 }
 
 
@@ -177,57 +285,62 @@ async function scrapeFlipkart(url) {
 /**
  * parseDimensions(rawString)
  *
- * PURPOSE:
- *   Converts a raw dimensions string into a structured object.
+ * Converts a raw dimensions string into a structured object.
  *
- * EXAMPLES:
- *   parseDimensions("210 x 85 x 90 cm (L x W x H)")
- *   → { raw: "210 x 85 x 90 cm (L x W x H)", lengthCm: 210, widthCm: 85, heightCm: 90 }
+ * Examples:
+ *   "210 x 85 x 90 cm (L x W x H)" → { raw, lengthCm: 210, widthCm: 85, heightCm: 90 }
+ *   "85.0 x 210.0 x 90.0 Centimeters" → same logic, left-to-right
  *
- *   parseDimensions("85.0 x 210.0 x 90.0 Centimeters")
- *   → { raw: "...", lengthCm: 210, widthCm: 85, heightCm: 90 }
- *
- * HINT:
- *   Use a regex to extract all numbers: rawString.match(/[\d.]+/g)
- *   The order (L x W x H) varies by listing — you may need heuristics
- *   (longest = length, middle = width, largest vertical = height for sofas).
- *   For Phase 2, a simple left-to-right assignment is fine.
- *
- * @param {string} rawString - Raw dimensions string from the product page
- * @returns {Object} - { raw, lengthCm, widthCm, heightCm }
+ * @param {string} rawString
+ * @returns {{ raw: string, lengthCm: number, widthCm: number, heightCm: number }}
  */
 function parseDimensions(rawString) {
-  // Shoaib: implement dimension parsing here
-  return { raw: rawString, lengthCm: 0, widthCm: 0, heightCm: 0 };
+  if (!rawString) {
+    return { raw: '', lengthCm: 0, widthCm: 0, heightCm: 0 };
+  }
+
+  const nums = (rawString.match(/[\d.]+/g) || []).map(Number).filter(n => !isNaN(n));
+
+  if (nums.length < 3) {
+    // Can't determine three dimensions — return what we have
+    return {
+      raw: rawString,
+      lengthCm: nums[0] || 0,
+      widthCm:  nums[1] || 0,
+      heightCm: nums[2] || 0,
+    };
+  }
+
+  // Check if the string explicitly labels L x W x H order
+  // Otherwise just use left-to-right (Phase 2 heuristic)
+  const [a, b, c] = nums;
+  return {
+    raw: rawString,
+    lengthCm: a,
+    widthCm:  b,
+    heightCm: c,
+  };
 }
 
 /**
  * detectCategory(productName)
  *
- * PURPOSE:
- *   Guesses the product category from the product name string.
- *   Returns a key matching the keys in PRODUCT_CATEGORIES (config.js).
- *
- * EXAMPLES:
- *   detectCategory("Wakefit Orthopaedic 3-Seater Sofa") → "sofa"
- *   detectCategory("Nilkamal Wooden Center Table")       → "table"
- *   detectCategory("Unknown Widget Pro Max")             → "sofa" (default)
- *
- * HINT:
- *   Check if the product name (lowercased) contains keywords:
- *   'sofa', 'couch', 'settee' → 'sofa'
- *   'chair', 'recliner'       → 'chair'
- *   'table', 'desk'           → 'table'
- *   'lamp', 'light', 'bulb'   → 'lamp'
- *   'bed', 'mattress'         → 'bed'
- *   Default: 'sofa' (most common in home décor)
+ * Guesses the product category from the product name.
+ * Returns a key matching PRODUCT_CATEGORIES in shared/config.js.
  *
  * @param {string} productName
- * @returns {string} - Category key matching PRODUCT_CATEGORIES in config.js
+ * @returns {string} - Category key
  */
 function detectCategory(productName) {
-  // Shoaib: implement category detection here
-  return 'sofa'; // default placeholder
+  const lower = (productName || '').toLowerCase();
+
+  if (/sofa|couch|settee|loveseat/.test(lower))  return 'sofa';
+  if (/chair|recliner|stool|ottoman/.test(lower)) return 'chair';
+  if (/table|desk|console|counter/.test(lower))  return 'table';
+  if (/lamp|light|bulb|lantern|chandelier/.test(lower)) return 'lamp';
+  if (/bed|mattress|cot|bunk/.test(lower))       return 'bed';
+
+  return 'sofa'; // default — most common home décor product
 }
 
 

@@ -1,0 +1,14 @@
+{
+  "name": "triverse-data-service",
+  "version": "1.0.0",
+  "description": "TRIVERSE product data extraction and price comparison service",
+  "main": "extractor.js",
+  "scripts": {
+    "test:extractor": "node -e \"const { extractProduct } = require('./extractor.js'); extractProduct(process.argv[1]).then(p => console.log(JSON.stringify(p, null, 2))).catch(e => console.error(e.message));\"",
+    "test:prices": "node -e \"const { getPrices } = require('./priceCompare.js'); getPrices(process.argv[1]).then(p => console.log(JSON.stringify(p, null, 2)));\""
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0"
+  }
+}
