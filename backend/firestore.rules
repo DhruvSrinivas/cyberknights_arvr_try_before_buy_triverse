@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // products/ — readable by anyone, writable only by authenticated
+    // Cloud Functions (service account). For the emulator, allow all.
+    match /products/{docId} {
+      allow read: if true;
+      allow write: if false; // Only backend functions write here
+    }
+
+    // prices/ — same policy as products/
+    match /prices/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

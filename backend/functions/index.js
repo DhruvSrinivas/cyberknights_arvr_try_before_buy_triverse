@@ -2,29 +2,22 @@
  * backend/functions/index.js — TRIVERSE Firebase Cloud Functions
  * OWNER: Dhruv
  *
- * RESPONSIBILITIES:
- *   - Expose HTTP endpoints the frontend calls
- *   - Call data-service functions (Shoaib's code)
- *   - Cache results in Firestore
- *   - Handle CORS, errors, and rate limiting
+ * ENDPOINTS:
+ *   POST /extractProduct  — extracts product data from a URL (Amazon/Flipkart)
+ *   GET  /getPrices       — fetches price comparison results for a product name
  *
- * INSTALL DEPENDENCIES (from backend/functions/ directory):
- *   npm install firebase-functions firebase-admin cors
+ * STACK:
+ *   firebase-functions v2, firebase-admin, cors, md5
  *
  * RUN LOCALLY:
  *   cd backend && firebase emulators:start
- *
- * ENDPOINTS EXPOSED:
- *   POST  /extractProduct  — extracts product data from a URL
- *   GET   /getPrices       — fetches price comparison for a product name
- *
- * ENDPOINT BASE URL (local):
- *   http://127.0.0.1:5001/YOUR_PROJECT_ID/us-central1/
  *
  * TEST WITH CURL:
  *   curl -X POST http://127.0.0.1:5001/YOUR_PROJECT_ID/us-central1/extractProduct \
  *     -H "Content-Type: application/json" \
  *     -d '{"url":"https://www.amazon.in/dp/B08XYZ"}'
+ *
+ *   curl "http://127.0.0.1:5001/YOUR_PROJECT_ID/us-central1/getPrices?productName=Wakefit+Sofa"
  */
 
 // ---------------------------------------------------------------------------
@@ -33,193 +26,278 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const admin         = require('firebase-admin');
 const cors          = require('cors');
+const md5           = require('md5');
 
-// Data-service modules (Shoaib's code)
-// Dhruv: adjust the path if the data-service directory moves.
-// These paths are relative to functions/ — using ../../ to go up to triverse/
+// Data-service modules (Shoaib's code).
+// Path: functions/ → ../../ → triverse/data-service/
 const { extractProduct: extractProductData } = require('../../data-service/extractor.js');
 const { getPrices: getPricesData }           = require('../../data-service/priceCompare.js');
 
-// Shared config — for collection names, cache TTL, and Firebase config
-const {
-  FIRESTORE_COLLECTIONS,
-  CACHE_TTL_MS,
-} = require('../../shared/config.js');
+// Shared config — collection names and cache TTLs
+const { FIRESTORE_COLLECTIONS, CACHE_TTL_MS } = require('../../shared/config.js');
 
 
 // ---------------------------------------------------------------------------
 // FIREBASE ADMIN INIT
 // ---------------------------------------------------------------------------
-/**
- * admin.initializeApp() sets up the Firebase Admin SDK.
- * In Cloud Functions environment, this auto-detects credentials.
- * In the local emulator, it uses the emulator automatically.
- * Dhruv: call this ONCE — calling it multiple times throws an error.
- */
+// Call once. In the emulator this auto-connects to the local Firestore.
 admin.initializeApp();
-
-const db = admin.firestore(); // Firestore database reference
+const db = admin.firestore();
 
 
 // ---------------------------------------------------------------------------
 // CORS CONFIGURATION
 // ---------------------------------------------------------------------------
-/**
- * corsHandler wraps each function to allow cross-origin requests.
- * Allowed origins: localhost (dev) and your .web.app domain (prod).
- * Dhruv: update the allowedOrigins array when your Firebase Hosting domain is known.
- */
+// Allow localhost variants for local dev, plus the Firebase Hosting .web.app
+// domain for production. Update the .web.app line with your real project ID.
 const corsHandler = cors({
-  origin: [
-    'http://localhost',
-    'http://127.0.0.1',
-    'http://localhost:5000',
-    'http://127.0.0.1:5000',
-    // Dhruv: add your Firebase Hosting URL here:
-    // 'https://YOUR_PROJECT_ID.web.app',
-    // 'https://YOUR_PROJECT_ID.firebaseapp.com',
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., curl, Postman, same-origin)
+    if (!origin) return callback(null, true);
+
+    const allowed = [
+      /^http:\/\/localhost(:\d+)?$/,
+      /^http:\/\/127\.0\.0\.1(:\d+)?$/,
+      /^https:\/\/[a-z0-9-]+\.web\.app$/,         // Firebase Hosting prod
+      /^https:\/\/[a-z0-9-]+\.firebaseapp\.com$/,  // Firebase Hosting alt
+    ];
+
+    const isAllowed = allowed.some((pattern) => pattern.test(origin));
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin not allowed — ${origin}`));
+    }
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400, // cache preflight for 24 h
 });
 
 
 // ---------------------------------------------------------------------------
-// UTILITY: Firestore Caching
+// RATE LIMITER  (simple in-memory, per-IP, max 20 req/min)
+// ---------------------------------------------------------------------------
+// NOTE: In-memory means limits reset on cold start. Good enough for hackathon.
+// For production, use Firestore or Redis-based rate limiting.
+const rateMap = new Map(); // { ip: { count, windowStart } }
+const RATE_LIMIT_MAX     = 20;           // max requests per window
+const RATE_LIMIT_WINDOW  = 60 * 1000;   // 1-minute window in ms
+
+/**
+ * checkRateLimit(ip)
+ * Returns true if the IP is within the allowed rate, false if exceeded.
+ */
+function checkRateLimit(ip) {
+  const now    = Date.now();
+  const record = rateMap.get(ip);
+
+  if (!record || now - record.windowStart > RATE_LIMIT_WINDOW) {
+    // New window
+    rateMap.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+
+  if (record.count >= RATE_LIMIT_MAX) {
+    return false; // Rate limit exceeded
+  }
+
+  record.count += 1;
+  return true;
+}
+
+/**
+ * getClientIp(req)
+ * Extracts real client IP, accounting for Firebase/GCP proxy headers.
+ */
+function getClientIp(req) {
+  return (
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+    req.socket?.remoteAddress ||
+    'unknown'
+  );
+}
+
+
+// ---------------------------------------------------------------------------
+// FIRESTORE CACHE HELPERS
 // ---------------------------------------------------------------------------
 
 /**
  * getCachedDoc(collection, docId, ttlMs)
  *
- * Fetches a Firestore document and checks if it's within the TTL.
- * Returns the cached data if fresh, or null if expired/missing.
+ * Fetches a Firestore document and checks whether it is still within the TTL.
+ * Returns the document data if fresh, or null if expired / missing.
  *
- * Dhruv: use this in both Cloud Functions to avoid re-scraping.
- *
- * @param {string} collection - Firestore collection name (from FIRESTORE_COLLECTIONS)
- * @param {string} docId      - Document ID (usually a hash of the URL or product name)
- * @param {number} ttlMs      - Time-to-live in milliseconds (from CACHE_TTL_MS)
- * @returns {Promise<Object|null>} - Cached data or null
+ * @param {string} collection - Firestore collection name
+ * @param {string} docId      - Document ID (MD5 hash of key)
+ * @param {number} ttlMs      - Time-to-live in milliseconds
+ * @returns {Promise<Object|null>}
  */
 async function getCachedDoc(collection, docId, ttlMs) {
-  // Dhruv: implement Firestore cache check here
-  //
-  // const docRef = db.collection(collection).doc(docId);
-  // const snap = await docRef.get();
-  // if (!snap.exists) return null;
-  // const data = snap.data();
-  // const age = Date.now() - data.fetchedAt.toMillis();
-  // if (age > ttlMs) return null;  // Expired
-  // return data;
+  const docRef = db.collection(collection).doc(docId);
+  const snap   = await docRef.get();
+
+  if (!snap.exists) return null;
+
+  const data = snap.data();
+
+  // fetchedAt is a Firestore Timestamp — convert to millis for comparison
+  if (!data.fetchedAt) return null;
+  const fetchedAtMs = data.fetchedAt.toMillis
+    ? data.fetchedAt.toMillis()
+    : new Date(data.fetchedAt).getTime();
+
+  const ageMs = Date.now() - fetchedAtMs;
+  if (ageMs > ttlMs) return null; // Cache expired
+
+  return data;
 }
 
 /**
  * setCachedDoc(collection, docId, data)
  *
- * Writes data to Firestore with a server timestamp.
- * Dhruv: call this after a successful scrape to cache the result.
+ * Writes data to Firestore, adding a server-side fetchedAt timestamp.
+ * Uses set() with merge: false so the document is fully replaced each time.
  *
  * @param {string} collection
  * @param {string} docId
  * @param {Object} data
  */
 async function setCachedDoc(collection, docId, data) {
-  // Dhruv: implement Firestore write here
-  //
-  // const docRef = db.collection(collection).doc(docId);
-  // await docRef.set({
-  //   ...data,
-  //   fetchedAt: admin.firestore.FieldValue.serverTimestamp(),
-  // });
-}
-
-/**
- * hashString(str)
- *
- * Creates a simple hash from a string for use as a Firestore document ID.
- * Firestore document IDs cannot contain '/', so we hash the URL/product name.
- *
- * Dhruv: use the `crypto` built-in (Node.js 18 includes it natively).
- *
- * @param {string} str
- * @returns {string} - A hex hash string safe for Firestore doc IDs
- */
-function hashString(str) {
-  const crypto = require('crypto');
-  return crypto.createHash('md5').update(str).digest('hex');
+  const docRef = db.collection(collection).doc(docId);
+  await docRef.set({
+    ...data,
+    fetchedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
 }
 
 
 // ---------------------------------------------------------------------------
 // CLOUD FUNCTION 1: extractProduct
+// POST /extractProduct
+// Body: { "url": "https://www.amazon.in/dp/XXXXXX" }
 // ---------------------------------------------------------------------------
 
 /**
- * extractProduct — POST /extractProduct
+ * extractProduct
  *
- * PURPOSE:
- *   Accepts a product URL, checks Firestore cache, calls Shoaib's extractor
- *   if not cached, saves to Firestore, and returns the product JSON.
+ * Flow:
+ *   1. CORS + preflight
+ *   2. Rate limit check (429 if exceeded)
+ *   3. Validate method is POST (405 otherwise)
+ *   4. Validate req.body.url exists (400 if missing)
+ *   5. MD5-hash the URL → Firestore doc ID
+ *   6. Check Firestore cache (products/) — return immediately if < 24h old
+ *   7. Call extractProductData(url) from data-service/extractor.js
+ *   8. Persist result to Firestore with fetchedAt timestamp
+ *   9. Return product JSON
  *
- * REQUEST BODY (JSON):
- *   { "url": "https://www.amazon.in/dp/XXXXXX" }
- *
- * RESPONSE (200 OK):
- *   { product JSON object } — see data-service/README.md for shape
- *
- * RESPONSE (400 Bad Request):
- *   { "error": "URL is required" }
- *
- * RESPONSE (422 Unprocessable Entity):
- *   { "error": "Unsupported platform. Use Amazon.in or Flipkart.com" }
- *
- * RESPONSE (500 Internal Server Error):
- *   { "error": "Failed to extract product", "details": "..." }
- *
- * WHAT TO IMPLEMENT (Dhruv — fill in the try block):
- *   1. Wrap response in corsHandler
- *   2. Handle OPTIONS preflight: if req.method === 'OPTIONS', res.status(204).send('')
- *   3. Validate: only allow POST method
- *   4. Parse req.body.url — return 400 if missing
- *   5. Generate docId = hashString(url)
- *   6. Check cache: const cached = await getCachedDoc(FIRESTORE_COLLECTIONS.products, docId, CACHE_TTL_MS.product)
- *   7. If cached, return res.json(cached)
- *   8. Else: call extractProductData(url)
- *   9. Save: await setCachedDoc(FIRESTORE_COLLECTIONS.products, docId, product)
- *  10. Return res.json(product)
- *
- * RUNTIME OPTIONS:
- *   timeoutSeconds: 30  — scraping can be slow; give it enough time
- *   memory: '256MiB'    — default, fine for scraping
- *   region: 'asia-south1' — Mumbai region for lower latency in India
+ * Firestore schema written:
+ *   products/{urlHash}: {
+ *     name, platform, originalPrice, currency, imageUrl,
+ *     category, dimensions{raw,lengthCm,widthCm,heightCm},
+ *     glbUrl, productUrl, fetchedAt
+ *   }
  */
 exports.extractProduct = onRequest(
   {
     timeoutSeconds: 30,
     memory: '256MiB',
-    region: 'asia-south1', // Mumbai — closest to Indian users
+    region: 'us-central1', // change to 'asia-south1' once project is set up in Mumbai
   },
-  async (req, res) => {
+  (req, res) => {
     corsHandler(req, res, async () => {
-      // Handle CORS preflight
+      // ── Preflight ──────────────────────────────────────────────────────────
       if (req.method === 'OPTIONS') {
         res.status(204).send('');
         return;
       }
 
-      try {
-        // Dhruv: implement the function body here following the steps above
+      // ── Rate limit ─────────────────────────────────────────────────────────
+      const clientIp = getClientIp(req);
+      if (!checkRateLimit(clientIp)) {
+        return res.status(429).json({
+          error: 'Too many requests. Limit is 20 requests per minute.',
+        });
+      }
 
-        // PLACEHOLDER — returns empty product so emulator doesn't crash
-        res.status(200).json({
-          message: 'extractProduct stub — Dhruv: implement this function',
-          receivedUrl: req.body?.url || null,
+      // ── Method guard ───────────────────────────────────────────────────────
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+      }
+
+      // ── Input validation ───────────────────────────────────────────────────
+      const url = req.body?.url;
+      if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+        return res.status(400).json({
+          error: 'URL is required and must be a valid http(s) URL.',
+        });
+      }
+
+      // ── Cache key ──────────────────────────────────────────────────────────
+      const docId = md5(url.trim());
+
+      try {
+        // ── Cache check ──────────────────────────────────────────────────────
+        const cached = await getCachedDoc(
+          FIRESTORE_COLLECTIONS.products,
+          docId,
+          CACHE_TTL_MS.product   // 24 hours
+        );
+
+        if (cached) {
+          console.log(`[extractProduct] Cache HIT for ${url} (docId: ${docId})`);
+          return res.status(200).json(cached);
+        }
+
+        console.log(`[extractProduct] Cache MISS for ${url} — calling extractor`);
+
+        // ── Scrape ────────────────────────────────────────────────────────────
+        const product = await extractProductData(url.trim());
+
+        // ── Persist to Firestore ──────────────────────────────────────────────
+        // Store exactly the schema fields defined in the README.
+        // glbUrl is optional — extractor may not return it yet (Phase 2).
+        const doc = {
+          name:          product.name          || '',
+          platform:      product.platform      || '',
+          originalPrice: product.originalPrice || 0,
+          currency:      product.currency      || 'INR',
+          imageUrl:      product.imageUrl      || '',
+          category:      product.category      || '',
+          dimensions: {
+            raw:      product.dimensions?.raw      || '',
+            lengthCm: product.dimensions?.lengthCm || 0,
+            widthCm:  product.dimensions?.widthCm  || 0,
+            heightCm: product.dimensions?.heightCm || 0,
+          },
+          glbUrl:     product.glbUrl     || '',
+          productUrl: product.productUrl || url.trim(),
+          // fetchedAt is added by setCachedDoc via serverTimestamp()
+        };
+
+        await setCachedDoc(FIRESTORE_COLLECTIONS.products, docId, doc);
+
+        console.log(`[extractProduct] Saved product "${doc.name}" to Firestore`);
+
+        // Return with fetchedAt as ISO string for clients that don't handle Timestamps
+        return res.status(200).json({
+          ...doc,
+          fetchedAt: new Date().toISOString(),
         });
 
       } catch (error) {
-        console.error('[extractProduct] Error:', error);
-        res.status(500).json({
-          error: 'Failed to extract product',
+        console.error('[extractProduct] Error:', error.message);
+
+        // Platform not supported → 422
+        if (error.message && error.message.toLowerCase().includes('unsupported platform')) {
+          return res.status(422).json({ error: error.message });
+        }
+
+        // All other errors → 500
+        return res.status(500).json({
+          error: 'Failed to extract product.',
           details: error.message,
         });
       }
@@ -230,71 +308,104 @@ exports.extractProduct = onRequest(
 
 // ---------------------------------------------------------------------------
 // CLOUD FUNCTION 2: getPrices
+// GET /getPrices?productName=Wakefit+Orthopaedic+Sofa
 // ---------------------------------------------------------------------------
 
 /**
- * getPrices — GET /getPrices?productName=...
+ * getPrices
  *
- * PURPOSE:
- *   Accepts a product name, checks Firestore cache, calls Shoaib's priceCompare
- *   if not cached, saves to Firestore, and returns the prices array.
+ * Flow:
+ *   1. CORS + preflight
+ *   2. Rate limit check (429 if exceeded)
+ *   3. Validate method is GET (405 otherwise)
+ *   4. Validate req.query.productName exists (400 if missing)
+ *   5. MD5-hash the productName → Firestore doc ID
+ *   6. Check Firestore cache (prices/) — return results array if < 1h old
+ *   7. Call getPricesData(productName) from data-service/priceCompare.js
+ *   8. Persist { results, fetchedAt } to Firestore
+ *   9. Return prices array
  *
- * QUERY PARAMETER:
- *   productName — URL-encoded product name
- *   Example: /getPrices?productName=Wakefit+Orthopaedic+Sofa
- *
- * RESPONSE (200 OK):
- *   [ array of price objects ] — see data-service/README.md for shape
- *
- * RESPONSE (400 Bad Request):
- *   { "error": "productName query parameter is required" }
- *
- * RESPONSE (500 Internal Server Error):
- *   { "error": "Failed to fetch prices", "details": "..." }
- *
- * WHAT TO IMPLEMENT (Dhruv — fill in the try block):
- *   1. Wrap response in corsHandler
- *   2. Handle OPTIONS preflight
- *   3. Parse req.query.productName — return 400 if missing
- *   4. Generate docId = hashString(productName)
- *   5. Check cache: const cached = await getCachedDoc(FIRESTORE_COLLECTIONS.prices, docId, CACHE_TTL_MS.prices)
- *   6. If cached, return res.json(cached.results)
- *   7. Else: call getPricesData(productName)
- *   8. Save: await setCachedDoc(FIRESTORE_COLLECTIONS.prices, docId, { results: prices })
- *   9. Return res.json(prices)
- *
- * RUNTIME OPTIONS:
- *   timeoutSeconds: 30  — price comparison queries multiple platforms
- *   region: 'asia-south1'
+ * Firestore schema written:
+ *   prices/{productNameHash}: {
+ *     results: [{ platform, price_inr, url, in_stock }],
+ *     fetchedAt
+ *   }
  */
 exports.getPrices = onRequest(
   {
     timeoutSeconds: 30,
     memory: '256MiB',
-    region: 'asia-south1',
+    region: 'us-central1',
   },
-  async (req, res) => {
+  (req, res) => {
     corsHandler(req, res, async () => {
-      // Handle CORS preflight
+      // ── Preflight ──────────────────────────────────────────────────────────
       if (req.method === 'OPTIONS') {
         res.status(204).send('');
         return;
       }
 
-      try {
-        // Dhruv: implement the function body here following the steps above
+      // ── Rate limit ─────────────────────────────────────────────────────────
+      const clientIp = getClientIp(req);
+      if (!checkRateLimit(clientIp)) {
+        return res.status(429).json({
+          error: 'Too many requests. Limit is 20 requests per minute.',
+        });
+      }
 
-        // PLACEHOLDER — returns empty array so emulator doesn't crash
-        res.status(200).json({
-          message: 'getPrices stub — Dhruv: implement this function',
-          receivedProductName: req.query?.productName || null,
-          prices: [],
+      // ── Method guard ───────────────────────────────────────────────────────
+      if (req.method !== 'GET') {
+        return res.status(405).json({ error: 'Method not allowed. Use GET.' });
+      }
+
+      // ── Input validation ───────────────────────────────────────────────────
+      const productName = req.query?.productName;
+      if (!productName || typeof productName !== 'string' || !productName.trim()) {
+        return res.status(400).json({
+          error: 'productName query parameter is required.',
+        });
+      }
+
+      const cleanName = productName.trim();
+
+      // ── Cache key ──────────────────────────────────────────────────────────
+      const docId = md5(cleanName);
+
+      try {
+        // ── Cache check ──────────────────────────────────────────────────────
+        const cached = await getCachedDoc(
+          FIRESTORE_COLLECTIONS.prices,
+          docId,
+          CACHE_TTL_MS.prices   // 1 hour
+        );
+
+        if (cached) {
+          console.log(`[getPrices] Cache HIT for "${cleanName}" (docId: ${docId})`);
+          return res.status(200).json(cached.results || []);
+        }
+
+        console.log(`[getPrices] Cache MISS for "${cleanName}" — calling priceCompare`);
+
+        // ── Fetch prices ─────────────────────────────────────────────────────
+        const prices = await getPricesData(cleanName);
+
+        // Ensure we always store an array
+        const safeResults = Array.isArray(prices) ? prices : [];
+
+        // ── Persist to Firestore ──────────────────────────────────────────────
+        await setCachedDoc(FIRESTORE_COLLECTIONS.prices, docId, {
+          results: safeResults,
+          // fetchedAt added by setCachedDoc
         });
 
+        console.log(`[getPrices] Saved ${safeResults.length} price result(s) for "${cleanName}"`);
+
+        return res.status(200).json(safeResults);
+
       } catch (error) {
-        console.error('[getPrices] Error:', error);
-        res.status(500).json({
-          error: 'Failed to fetch prices',
+        console.error('[getPrices] Error:', error.message);
+        return res.status(500).json({
+          error: 'Failed to fetch prices.',
           details: error.message,
         });
       }

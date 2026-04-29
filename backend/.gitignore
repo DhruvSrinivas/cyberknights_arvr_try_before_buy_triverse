@@ -1,0 +1,13 @@
+# dependencies
+node_modules/
+
+# environments
+.env
+.env.local
+
+# firebase-debug
+firebase-debug.log
+firebase-debug.*.log
+
+# Mac
+.DS_Store

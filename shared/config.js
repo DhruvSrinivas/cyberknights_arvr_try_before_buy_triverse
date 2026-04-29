@@ -27,8 +27,8 @@
 // Example prod URL: 'https://us-central1-triverse-xxxx.cloudfunctions.net'
 const API_BASE_URL =
   process.env.NODE_ENV === 'production'
-    ? 'https://us-central1-YOUR_FIREBASE_PROJECT_ID.cloudfunctions.net'
-    : 'http://127.0.0.1:5001/YOUR_FIREBASE_PROJECT_ID/us-central1';
+    ? 'https://us-central1-cyberknights-arvr.cloudfunctions.net'
+    : 'http://127.0.0.1:5001/cyberknights-arvr/us-central1';
 
 // ---------------------------------------------------------------------------
 // FIREBASE CONFIG
@@ -37,12 +37,13 @@ const API_BASE_URL =
 // Go to: Firebase Console → Project Settings → Your apps → Web app → Config snippet
 // NEVER commit real API keys to a public repo. Use environment variables in prod.
 const FIREBASE_CONFIG = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_PROJECT_ID.appspot.com',
-  messagingSenderId: 'YOUR_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  apiKey:            'AIzaSyA9r3HiwaTRB30oaFPfxtGt_gywfkv9O2Q',
+  authDomain:        'cyberknights-arvr.firebaseapp.com',
+  projectId:         'cyberknights-arvr',
+  storageBucket:     'cyberknights-arvr.firebasestorage.app',
+  messagingSenderId: '616199867398',
+  appId:             '1:616199867398:web:017ef7a68b9db38efdc787',
+  measurementId:     'G-P72B8Q7GB4',
 };
 
 // ---------------------------------------------------------------------------
