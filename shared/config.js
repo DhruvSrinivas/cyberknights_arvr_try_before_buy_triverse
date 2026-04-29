@@ -23,13 +23,16 @@
 // ---------------------------------------------------------------------------
 // Points to the Firebase Cloud Functions base URL.
 // In local development this is the emulator URL.
-// In production, replace with your actual Cloud Functions region URL.
+// Uses a typeof guard so this file works in both Node.js (backend) and browsers (frontend).
 // Example prod URL: 'https://us-central1-triverse-xxxx.cloudfunctions.net'
-const isProd = (typeof process !== 'undefined') && process.env && (process.env.NODE_ENV === 'production');
-const API_BASE_URL =
-  isProd
-    ? 'https://us-central1-cyberknights-arvr.cloudfunctions.net'
-    : 'http://127.0.0.1:5001/cyberknights-arvr/us-central1';
+const _isNode = typeof process !== 'undefined' && process.env;
+const _isProd  = _isNode
+  ? process.env.NODE_ENV === 'production'
+  : (typeof window !== 'undefined' && window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost');
+
+const API_BASE_URL = _isProd
+  ? 'https://us-central1-YOUR_FIREBASE_PROJECT_ID.cloudfunctions.net'
+  : 'http://127.0.0.1:5003/demo-cyberknights/us-central1';
 
 // ---------------------------------------------------------------------------
 // FIREBASE CONFIG
