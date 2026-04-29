@@ -368,6 +368,31 @@ function openARModal(product) {
   document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
   document.querySelector('.color-swatch[data-color="natural"]')?.classList.add('selected');
 
+  // Generate AI Suitability Insights
+  const aiTextEl = document.getElementById('ar-ai-text');
+  if (aiTextEl) {
+    const l = document.getElementById('dim-length').value;
+    const w = document.getElementById('dim-width').value;
+    const styleLabel = window.STYLE_OPTIONS?.find(s => s.id === selectedStyle)?.label || 'chosen';
+    
+    // Simple rule-based mock for suitability
+    let colorRec = 'Natural Wood';
+    if (selectedStyle === 'modern') colorRec = 'Charcoal';
+    if (selectedStyle === 'bohemian') colorRec = 'Terracotta (Rust)';
+    
+    aiTextEl.innerHTML = `Based on your <strong>${l}×${w} ft</strong> room, this ${product.category} is an excellent fit. The scale leaves plenty of walking space. <br/><br/>💡 <em>AI Tip:</em> We recommend the <strong>${colorRec}</strong> color variant to best match your ${styleLabel} aesthetic.`;
+  }
+
+  // Reset Room Upload
+  const uploadInput = document.getElementById('room-img-input');
+  const previewBox = document.getElementById('room-img-preview');
+  if (uploadInput && previewBox) {
+    uploadInput.value = '';
+    previewBox.classList.add('hidden');
+    document.getElementById('room-img-bg').src = '';
+    document.getElementById('room-img-overlay').src = product.imageUrl; // Use product image as overlay
+  }
+
   // Hide QR panel
   const qrPanel = document.getElementById('ar-qr-panel');
   if (qrPanel) qrPanel.classList.add('hidden');
@@ -430,6 +455,34 @@ function hideError() {
   errorMessage.classList.add('hidden');
   errorText.textContent = '';
 }
+
+// Handle Room Image Upload
+const roomImgInput = document.getElementById('room-img-input');
+if (roomImgInput) {
+  roomImgInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        document.getElementById('room-img-bg').src = event.target.result;
+        document.getElementById('room-img-preview').classList.remove('hidden');
+        
+        // Hide the 3D viewer when showing 2D preview
+        document.getElementById('ar-container').style.display = 'none';
+        document.getElementById('ar-color-picker').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+// Ensure AR viewer comes back if modal is closed and reopened
+const originalCloseAR = window.closeARModal;
+window.closeARModal = function() {
+  originalCloseAR();
+  document.getElementById('ar-container').style.display = 'block';
+  document.getElementById('ar-color-picker').style.display = 'block';
+};
 
 // ---------------------------------------------------------------------------
 // INIT

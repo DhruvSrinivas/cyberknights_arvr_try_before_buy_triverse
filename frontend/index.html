@@ -204,6 +204,24 @@
       <!-- Dimensions + Price -->
       <div class="ar-modal__info" id="ar-modal-info"></div>
 
+      <!-- AI Suitability Score -->
+      <div class="ar-ai-panel">
+        <div class="ar-ai-panel__header">✨ AI Designer Insights</div>
+        <p class="ar-ai-panel__text" id="ar-ai-text">Analyzing suitability...</p>
+      </div>
+
+      <!-- Room Image Simulator -->
+      <div class="ar-room-upload" id="ar-room-upload">
+        <p class="ar-room-upload__title">Virtual Room Simulator</p>
+        <p class="ar-room-upload__subtitle">Upload a photo of your room to see a static 2D preview.</p>
+        <input type="file" id="room-img-input" accept="image/*" class="hidden" />
+        <button class="btn-secondary btn-sm" onclick="document.getElementById('room-img-input').click()">📸 Upload Room Image</button>
+        <div id="room-img-preview" class="room-img-preview hidden">
+          <img id="room-img-bg" src="" alt="Room Background" />
+          <img id="room-img-overlay" src="" alt="3D Product Overlay" />
+        </div>
+      </div>
+
       <!-- Actions -->
       <div class="ar-modal__actions">
         <a class="btn-buy" id="ar-buy-btn" href="#" target="_blank" rel="noopener">🛒 Buy Now</a>

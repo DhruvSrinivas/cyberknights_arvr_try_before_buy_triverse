@@ -62,6 +62,8 @@ const corsHandler = cors({
     const allowed = [
       /^http:\/\/localhost(:\d+)?$/,
       /^http:\/\/127\.0\.0\.1(:\d+)?$/,
+      /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/,        // Local network IP
+      /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/,       // Local network IP
       /^https:\/\/[a-z0-9-]+\.web\.app$/,         // Firebase Hosting prod
       /^https:\/\/[a-z0-9-]+\.firebaseapp\.com$/,  // Firebase Hosting alt
     ];

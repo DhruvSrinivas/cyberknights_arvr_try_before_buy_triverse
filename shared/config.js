@@ -28,11 +28,11 @@
 const _isNode = typeof process !== 'undefined' && process.env;
 const _isProd  = _isNode
   ? process.env.NODE_ENV === 'production'
-  : (typeof window !== 'undefined' && window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost');
+  : (typeof window !== 'undefined' && window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('10.') && !window.location.hostname.startsWith('192.168.'));
 
 const API_BASE_URL = _isProd
   ? 'https://us-central1-YOUR_FIREBASE_PROJECT_ID.cloudfunctions.net'
-  : 'http://127.0.0.1:5003/demo-cyberknights/us-central1';
+  : `http://${typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1'}:5003/demo-cyberknights/us-central1`;
 
 // ---------------------------------------------------------------------------
 // FIREBASE CONFIG

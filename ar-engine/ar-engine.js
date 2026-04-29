@@ -57,16 +57,13 @@ export function initARViewer(glbUrl, dimensions, containerId) {
   viewer.setAttribute('exposure', '0.8');
   viewer.setAttribute('loading', 'eager');
 
-  // ── Step 5: Set real-world scale from product dimensions ───────────────────
-  // model-viewer uses meters. Product dimensions come in cm → divide by 100.
-  // The default GLB (Astronaut) is ~1.8m tall; for furniture we scale it down.
-  if (dimensions && dimensions.lengthCm > 0) {
-    const scaleX = (dimensions.lengthCm / 100).toFixed(2);
-    const scaleY = (dimensions.heightCm / 100).toFixed(2);
-    const scaleZ = (dimensions.widthCm / 100).toFixed(2);
-    viewer.setAttribute('scale', `${scaleX} ${scaleY} ${scaleZ}`);
-    console.log(`[AR Engine] Scale set to ${scaleX} ${scaleY} ${scaleZ}`);
-  }
+  // ── Step 5: AR Scaling & Quality ───────────────────────────────────────────
+  // We remove the manual scale override because proper GLB models are already true-to-scale.
+  // Instead, we let WebXR handle the real-world sizing automatically.
+  viewer.setAttribute('ar-scale', 'auto');
+  viewer.setAttribute('environment-image', 'neutral'); // Improves lighting and reflections
+  viewer.setAttribute('shadow-softness', '1.5');
+  viewer.setAttribute('camera-orbit', '45deg 55deg 2.5m'); // Better default camera angle
 
   // ── Step 6: Size the viewer ────────────────────────────────────────────────
   viewer.style.width = '100%';
