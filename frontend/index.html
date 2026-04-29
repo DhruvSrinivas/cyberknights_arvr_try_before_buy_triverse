@@ -16,7 +16,6 @@
   <!-- NAV -->
   <nav class="navbar" id="navbar">
     <div class="navbar__logo">
-      <span class="navbar__logo-mark">⬡</span>
       <span class="navbar__logo-text">TRIVERSE</span>
     </div>
     <p class="navbar__tagline">AR Home Décor · Try Before You Buy</p>
@@ -24,18 +23,18 @@
 
   <!-- HERO -->
   <section class="hero" id="hero">
-    <div class="hero__eyebrow">✦ Powered by WebAR · ML Recommendations</div>
+    <div class="hero__eyebrow">Powered by WebAR · ML Recommendations</div>
     <h1 class="hero__title">Design Your Space.<br/><span class="hero__title--accent">See It In AR.</span></h1>
     <p class="hero__subtitle">Pick your room, enter dimensions, choose a style — our ML engine finds the perfect furniture. Preview it in your actual room before you buy.</p>
     <button class="btn-primary btn-xl" id="start-btn" onclick="document.getElementById('wizard').scrollIntoView({behavior:'smooth'})">
       Start Designing <span class="btn-arrow">→</span>
     </button>
     <div class="hero__features">
-      <span class="hero__feature">📐 Room Dimensions</span>
+      <span class="hero__feature">Room Dimensions</span>
       <span class="hero__feature-dot">·</span>
-      <span class="hero__feature">🎨 Style Match</span>
+      <span class="hero__feature">Style Match</span>
       <span class="hero__feature-dot">·</span>
-      <span class="hero__feature">📱 AR Preview</span>
+      <span class="hero__feature">AR Preview</span>
     </div>
   </section>
 
@@ -133,8 +132,8 @@
       <div class="wizard__nav">
         <button class="btn-secondary" onclick="goToStep(2)">← Back</button>
         <button class="btn-primary btn-recommend" id="recommend-btn">
-          <span id="recommend-btn-text">✦ Get Recommendations</span>
-          <span id="recommend-spinner" class="spinner-inline hidden">⟳</span>
+          <span id="recommend-btn-text">Get Recommendations</span>
+          <span id="recommend-spinner" class="spinner-inline hidden">...</span>
         </button>
       </div>
     </div>
@@ -142,7 +141,6 @@
 
   <!-- ERROR -->
   <div id="error-message" class="error-message hidden" role="alert">
-    <span class="error-message__icon">⚠</span>
     <span id="error-text"></span>
   </div>
 
@@ -201,12 +199,41 @@
         </div>
       </div>
 
+      <!-- AI Lighting Simulator (USP) -->
+      <div class="ar-lighting-simulator" style="margin-top:20px; padding:15px; background:var(--bg-surface); border-radius:var(--radius-md);">
+        <p class="ar-color-picker__label" style="font-size:12px; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px;">AI Lighting Environment</p>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-secondary btn-sm lighting-btn" data-env="neutral" onclick="setLighting('neutral', this)" style="flex:1; padding:8px; font-size:12px;">Studio</button>
+          <button class="btn-secondary btn-sm lighting-btn" data-env="sunset" onclick="setLighting('sunset', this)" style="flex:1; padding:8px; font-size:12px;">Warm Evening</button>
+          <button class="btn-secondary btn-sm lighting-btn" data-env="night" onclick="setLighting('night', this)" style="flex:1; padding:8px; font-size:12px;">Night Room</button>
+        </div>
+      </div>
+      
+      <script>
+        function setLighting(env, btn) {
+          document.querySelectorAll('.lighting-btn').forEach(b => b.style.borderColor = 'var(--border-md)');
+          btn.style.borderColor = 'var(--primary)';
+          const viewer = document.querySelector('model-viewer');
+          if (viewer) {
+            if (env === 'neutral') {
+              viewer.environmentImage = 'neutral';
+              viewer.exposure = 1.0;
+            } else if (env === 'sunset') {
+              viewer.environmentImage = 'https://modelviewer.dev/shared-assets/environments/spruit_sunrise_1k_HDR.hdr';
+              viewer.exposure = 1.2;
+            } else if (env === 'night') {
+              viewer.environmentImage = 'https://modelviewer.dev/shared-assets/environments/moonless_golf_1k.hdr';
+              viewer.exposure = 0.5;
+            }
+          }
+        }
+      </script>
+
       <!-- Dimensions + Price -->
       <div class="ar-modal__info" id="ar-modal-info"></div>
 
-      <!-- AI Suitability Score -->
       <div class="ar-ai-panel">
-        <div class="ar-ai-panel__header">✨ AI Designer Insights</div>
+        <div class="ar-ai-panel__header">AI Designer Insights</div>
         <p class="ar-ai-panel__text" id="ar-ai-text">Analyzing suitability...</p>
       </div>
 
@@ -215,7 +242,7 @@
         <p class="ar-room-upload__title">Virtual Room Simulator</p>
         <p class="ar-room-upload__subtitle">Upload a photo of your room to see a static 2D preview.</p>
         <input type="file" id="room-img-input" accept="image/*" class="hidden" />
-        <button class="btn-secondary btn-sm" onclick="document.getElementById('room-img-input').click()">📸 Upload Room Image</button>
+        <button class="btn-secondary btn-sm" onclick="document.getElementById('room-img-input').click()">Upload Room Image</button>
         <div id="room-img-preview" class="room-img-preview hidden">
           <img id="room-img-bg" src="" alt="Room Background" />
           <img id="room-img-overlay" src="" alt="3D Product Overlay" />
@@ -224,8 +251,8 @@
 
       <!-- Actions -->
       <div class="ar-modal__actions">
-        <a class="btn-buy" id="ar-buy-btn" href="#" target="_blank" rel="noopener">🛒 Buy Now</a>
-        <button class="btn-phone" id="ar-qr-btn" onclick="toggleQR()">📱 View on Phone</button>
+        <a class="btn-buy" id="ar-buy-btn" href="#" target="_blank" rel="noopener">Buy Now</a>
+        <button class="btn-phone" id="ar-qr-btn" onclick="toggleQR()">View on Phone</button>
       </div>
 
       <!-- QR Panel (hidden by default) -->
@@ -241,7 +268,7 @@
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer__inner">
-      <span class="footer__brand">⬡ TRIVERSE</span>
+      <span class="footer__brand">TRIVERSE</span>
       <span class="footer__divider">·</span>
       <span>Built by <strong>CyberKnights</strong> — Umar · Atul · Shoaib · Dhruv</span>
     </div>

@@ -62,7 +62,7 @@ const PRODUCT_CATALOG = [
   },
   {
     "id": "furn-03",
-    "name": "Industrial Wooden Coffee Table",
+    "name": "Industrial Wooden Chair",
     "category": "furniture",
     "styles": [
       "industrial",
@@ -72,23 +72,23 @@ const PRODUCT_CATALOG = [
       "living"
     ],
     "price_inr": 6500,
-    "imageUrl": "https://placehold.co/600x400/0B7A75/FFFFFF?text=Industrial+Wooden+Coffee+Table",
-    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
+    "imageUrl": "https://placehold.co/600x400/0B7A75/FFFFFF?text=Industrial+Wooden+Chair",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb",
     "dimensions": {
-      "lengthCm": 120,
+      "lengthCm": 60,
       "widthCm": 60,
-      "heightCm": 45
+      "heightCm": 85
     },
     "platform": "UrbanLadder",
     "buyUrl": "#",
     "tags": [
-      "table",
-      "coffee table"
+      "chair",
+      "wooden"
     ]
   },
   {
     "id": "furn-04",
-    "name": "Bohemian Rattan Bed Frame",
+    "name": "Bohemian Rattan Chair",
     "category": "furniture",
     "styles": [
       "bohemian"
@@ -96,20 +96,20 @@ const PRODUCT_CATALOG = [
     "roomTypes": [
       "bedroom"
     ],
-    "price_inr": 32000,
-    "imageUrl": "https://placehold.co/600x400/0B7A75/FFFFFF?text=Bohemian+Rattan+Bed+Frame",
-    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
+    "price_inr": 12000,
+    "imageUrl": "https://placehold.co/600x400/0B7A75/FFFFFF?text=Bohemian+Rattan+Chair",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb",
     "dimensions": {
-      "lengthCm": 200,
-      "widthCm": 180,
-      "heightCm": 110
+      "lengthCm": 75,
+      "widthCm": 75,
+      "heightCm": 90
     },
     "platform": "Amazon",
     "buyUrl": "#",
     "tags": [
-      "bed",
+      "chair",
       "rattan",
-      "queen"
+      "boho"
     ]
   },
   {
@@ -363,8 +363,8 @@ const PRODUCT_CATALOG = [
   },
   {
     "id": "decor-04",
-    "name": "Geometric Pattern Rug",
-    "category": "decoration",
+    "name": "Geometric Table Lamp",
+    "category": "items",
     "styles": [
       "scandinavian",
       "modern"
@@ -373,19 +373,19 @@ const PRODUCT_CATALOG = [
       "living",
       "bedroom"
     ],
-    "price_inr": 5999,
-    "imageUrl": "https://placehold.co/600x400/C05A3A/FFFFFF?text=Geometric+Rug",
-    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
+    "price_inr": 1999,
+    "imageUrl": "https://placehold.co/600x400/C05A3A/FFFFFF?text=Geometric+Lamp",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
     "dimensions": {
-      "lengthCm": 180,
-      "widthCm": 120,
-      "heightCm": 2
+      "lengthCm": 20,
+      "widthCm": 20,
+      "heightCm": 45
     },
     "platform": "Amazon",
     "buyUrl": "#",
     "tags": [
-      "rug",
-      "floor",
+      "lamp",
+      "table",
       "geometric"
     ]
   },

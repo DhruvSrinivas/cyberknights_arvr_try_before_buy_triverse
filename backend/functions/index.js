@@ -570,13 +570,28 @@ exports.getRecommendations = onRequest(
 
       try {
         // ── Score all products ────────────────────────────────────────────────
-        const scored = PRODUCT_CATALOG
-          .map((product, idx) => ({
-            ...product,
-            price_inr: product.price_inr,  // expose price_inr top-level for frontend
-            _score: scoreProduct(product, params),
-            _rank:  idx,
-          }))
+        let scored = PRODUCT_CATALOG
+          .map((product, idx) => {
+            const score = scoreProduct(product, params);
+            
+            // Generate AI Justification
+            let aiText = "";
+            if (product.category === 'furniture') {
+              aiText = `This ${product.name} maximizes your ${lengthCm/30.48 | 0}x${widthCm/30.48 | 0}ft space while preserving a clean ${style} aesthetic.`;
+            } else if (product.category === 'plants') {
+              aiText = `Adding a ${product.name} brings life to your ${roomType} and complements the ${style} vibe naturally.`;
+            } else {
+              aiText = `The ${product.name} provides the perfect finishing touch to your ${style} room without overwhelming the space.`;
+            }
+
+            return {
+              ...product,
+              price_inr: product.price_inr,  // expose price_inr top-level for frontend
+              _score: score,
+              _rank:  idx,
+              aiJustification: aiText
+            };
+          })
           .filter(p => p._score > 0)        // exclude zero-score products
           .sort((a, b) => b._score - a._score)
           .slice(0, 5);                      // top 5

@@ -104,7 +104,6 @@ function renderRoomGrid() {
     card.className = 'room-card';
     card.id = `room-card-${room.id}`;
     card.innerHTML = `
-      <div class="room-card__emoji">${room.emoji}</div>
       <div class="room-card__label">${room.label}</div>
       <div class="room-card__desc">${room.description}</div>
     `;
@@ -126,7 +125,7 @@ function selectRoom(room, cardEl) {
   updateDimDisplay();
 
   // Update room label on step 2
-  roomLabelDisp.textContent = `${room.emoji} ${room.label} — adjust to your actual measurements`;
+  roomLabelDisp.textContent = `${room.label} — adjust to your actual measurements`;
 
   // Auto advance after brief delay for nice UX
   setTimeout(() => goToStep(2), 280);
@@ -171,7 +170,7 @@ function renderStyleGrid() {
     const chip = document.createElement('button');
     chip.className = 'style-chip';
     chip.id = `style-${opt.id}`;
-    chip.textContent = `${opt.emoji} ${opt.label}`;
+    chip.textContent = `${opt.label}`;
     chip.addEventListener('click', () => {
       document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('selected'));
       chip.classList.add('selected');
@@ -251,8 +250,37 @@ async function handleRecommend() {
     displayRecommendations(products);
   } catch (err) {
     console.error('[App] getRecommendations error:', err);
-    showError(`Could not fetch recommendations: ${err.message}`);
-    resultsSection.classList.add('hidden');
+    
+    // --- LOCAL FALLBACK FOR HACKATHON IF BACKEND IS DOWN ---
+    console.log('[App] Falling back to local catalog...');
+    const scored = window.PRODUCT_CATALOG.map((p, idx) => {
+      let score = 0;
+      if ((p.styles || []).includes(selectedStyle)) score += 0.4;
+      if ((p.roomTypes || []).includes(selectedRoom.id)) score += 0.3;
+      if (p.price_inr <= budget) score += 0.3;
+      
+      let aiText = "";
+      if (p.category === 'furniture') {
+        aiText = `This ${p.name} maximizes your ${Math.floor(lengthCm/30.48)}x${Math.floor(widthCm/30.48)}ft space while preserving a clean ${selectedStyle} aesthetic.`;
+      } else if (p.category === 'plants') {
+        aiText = `Adding a ${p.name} brings life to your ${selectedRoom.id} and complements the ${selectedStyle} vibe naturally.`;
+      } else {
+        aiText = `The ${p.name} provides the perfect finishing touch to your ${selectedStyle} room without overwhelming the space.`;
+      }
+      
+      return { ...p, _score: score, _rank: idx, aiJustification: aiText };
+    })
+    .filter(p => p._score > 0)
+    .sort((a, b) => b._score - a._score)
+    .slice(0, 5);
+
+    if (scored.length > 0) {
+      hideError();
+      displayRecommendations(scored);
+    } else {
+      showError(`Could not fetch recommendations and no local matches found.`);
+      resultsSection.classList.add('hidden');
+    }
   } finally {
     recommendText.classList.remove('hidden');
     recommendSpinner.classList.add('hidden');
@@ -291,7 +319,6 @@ function displayRecommendations(products) {
   if (!products.length) {
     productsGrid.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;color:var(--text2);padding:40px;">
-        <p style="font-size:40px">🔍</p>
         <p>No products matched your filters. Try a different style or budget.</p>
       </div>`;
     return;
@@ -320,7 +347,7 @@ function buildProductCard(product, isBestMatch) {
     <div class="product-card__img-wrap">
       <img class="product-card__img" src="${product.imageUrl}" alt="${product.name}" loading="lazy" onerror="this.classList.add('error'); this.src='https://placehold.co/400x300/121d23/d7c9aa?text=Image+Unavailable';" />
       <span class="product-card__badge">${product.category}</span>
-      ${isBestMatch ? '<span class="product-card__score">★ Best Match</span>' : `<span class="product-card__score">${scorePct}%</span>`}
+      ${isBestMatch ? '<span class="product-card__score">Best Match</span>' : `<span class="product-card__score">${scorePct}%</span>`}
     </div>
     <div class="product-card__body">
       <div class="product-card__name">${product.name}</div>
@@ -328,20 +355,67 @@ function buildProductCard(product, isBestMatch) {
         <span class="product-card__price">₹${Number(product.price_inr).toLocaleString('en-IN')}</span>
         <span class="product-card__platform">${product.platform}</span>
       </div>
-      ${dimsText ? `<div style="font-size:11px;color:var(--text2);">📐 ${dimsText}</div>` : ''}
+      ${dimsText ? `<div style="font-size:11px;color:var(--text2);">Dimensions: ${dimsText}</div>` : ''}
       <div class="score-bar"><div class="score-bar__fill" style="width:${scorePct}%"></div></div>
       <div class="product-card__tags">
         ${(product.tags || []).slice(0, 3).map(t => `<span class="product-card__tag">${t}</span>`).join('')}
       </div>
-      <div class="product-card__actions">
-        <button class="btn-ar" data-product-id="${product.id}">📱 View in AR</button>
-        <a class="btn-buy" href="${product.buyUrl}" target="_blank" rel="noopener">🛒 Buy on ${product.platform}</a>
+      <div class="product-card__actions" style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; gap:8px;">
+          <button class="btn-ar" data-product-id="${product.id}" style="flex:1;">View in AR</button>
+          <a class="btn-buy" href="${product.buyUrl}" target="_blank" rel="noopener" style="flex:1;">Buy on ${product.platform}</a>
+        </div>
+        <button class="btn-compare btn-secondary" data-product-name="${product.name}" style="width:100%;">Compare Prices</button>
+        <div class="compare-results hidden" style="margin-top:10px; font-size:13px; padding:10px; background:var(--bg-surface); border-radius:var(--radius-sm);"></div>
       </div>
     </div>
   `;
 
   // View in AR button
   card.querySelector('.btn-ar').addEventListener('click', () => openARModal(product));
+  
+  // Compare prices button
+  const compareBtn = card.querySelector('.btn-compare');
+  const compareRes = card.querySelector('.compare-results');
+  compareBtn.addEventListener('click', async () => {
+    compareBtn.textContent = 'Comparing...';
+    compareBtn.disabled = true;
+    try {
+      let prices = [];
+      try {
+        const res = await fetch(`${API_BASE_URL}/getPrices?productName=${encodeURIComponent(product.name)}`);
+        if (!res.ok) throw new Error('Failed to fetch prices');
+        prices = await res.json();
+      } catch (err) {
+        // --- LOCAL FALLBACK FOR HACKATHON IF BACKEND IS DOWN ---
+        console.warn('[App] getPrices failed, using local mock data...');
+        const basePrice = product.price_inr;
+        prices = [
+          { platform: product.platform, price_inr: basePrice, url: product.buyUrl, in_stock: true },
+          { platform: product.platform === 'Amazon' ? 'Flipkart' : 'Amazon', price_inr: Math.floor(basePrice * 1.05), url: product.buyUrl, in_stock: true }
+        ];
+      }
+      
+      if (prices.length > 0) {
+        compareRes.innerHTML = prices.map(p => `
+          <div style="display:flex; justify-content:space-between; margin-bottom:4px; padding-bottom:4px; border-bottom:1px solid var(--border);">
+            <span>${p.platform}</span>
+            <strong>₹${Number(p.price_inr).toLocaleString('en-IN')}</strong>
+          </div>
+        `).join('') + `<div style="text-align:right; margin-top:8px;"><a href="${prices[0].url}" target="_blank" style="color:var(--primary); font-weight:600;">Best Deal -></a></div>`;
+        compareRes.classList.remove('hidden');
+      } else {
+        compareRes.innerHTML = 'No other prices found.';
+        compareRes.classList.remove('hidden');
+      }
+    } catch (e) {
+      compareRes.innerHTML = 'Error fetching prices.';
+      compareRes.classList.remove('hidden');
+    } finally {
+      compareBtn.textContent = 'Compare Prices';
+      compareBtn.disabled = false;
+    }
+  });
 
   return card;
 }
@@ -356,10 +430,10 @@ function openARModal(product) {
   currentARProduct = product;
   arModalTitle.textContent = product.name;
   arModalInfo.textContent  = product.dimensions
-    ? `📐 ${product.dimensions.lengthCm} × ${product.dimensions.widthCm} × ${product.dimensions.heightCm} cm`
+    ? `Dimensions: ${product.dimensions.lengthCm} × ${product.dimensions.widthCm} × ${product.dimensions.heightCm} cm`
     : '';
   arBuyBtn.href = product.buyUrl;
-  arBuyBtn.textContent = `🛒 Buy on ${product.platform} · ₹${Number(product.price_inr).toLocaleString('en-IN')}`;
+  arBuyBtn.textContent = `Buy on ${product.platform} · ₹${Number(product.price_inr).toLocaleString('en-IN')}`;
 
   arModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
@@ -380,7 +454,7 @@ function openARModal(product) {
     if (selectedStyle === 'modern') colorRec = 'Charcoal';
     if (selectedStyle === 'bohemian') colorRec = 'Terracotta (Rust)';
     
-    aiTextEl.innerHTML = `Based on your <strong>${l}×${w} ft</strong> room, this ${product.category} is an excellent fit. The scale leaves plenty of walking space. <br/><br/>💡 <em>AI Tip:</em> We recommend the <strong>${colorRec}</strong> color variant to best match your ${styleLabel} aesthetic.`;
+    aiTextEl.innerHTML = `Based on your <strong>${l}×${w} ft</strong> room, this ${product.category} is an excellent fit. The scale leaves plenty of walking space. <br/><br/><em>AI Tip:</em> We recommend the <strong>${colorRec}</strong> color variant to best match your ${styleLabel} aesthetic. <br/><br/><strong>AI Justification:</strong> ${product.aiJustification || "A great match for your space."}`;
   }
 
   // Reset Room Upload
