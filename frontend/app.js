@@ -1,284 +1,394 @@
 /**
- * frontend/app.js — TRIVERSE Application Logic
- * OWNER: Umar
+ * frontend/app.js — TRIVERSE Application Logic (Room Preset + ML Recommendation)
+ * OWNER: Umar / Shoaib
  *
- * RESPONSIBILITIES:
- * - Wire all DOM event listeners
- * - Call backend API endpoints (extractProduct, getPrices)
- * - Update the DOM with product data and prices
- * - Trigger the AR viewer via initARViewer()
+ * FLOW:
+ *   Step 1 → User picks a room type (rendered from ROOM_PRESETS)
+ *   Step 2 → User enters L × W × H in feet (converted to cm)
+ *   Step 3 → User picks style + budget → calls GET /getRecommendations
+ *   Results → Product cards rendered → "View in AR" opens AR modal
  *
- * IMPORTS:
- * - API_BASE_URL from shared/config.js  (backend URL)
- * - initARViewer from ar-engine/ar-engine.js  (AR viewer setup)
- *
- * DO NOT:
- * - Hardcode any URLs or product data
- * - Implement scraping or Firebase logic here
- * - Modify ar-engine.js or data-service files
+ * GLOBALS (loaded via <script> in index.html before this file):
+ *   window.ROOM_PRESETS, window.STYLE_OPTIONS, window.BUDGET_OPTIONS,
+ *   window.PRODUCT_CATALOG, window.API_BASE_URL
  */
 
-// ---------------------------------------------------------------------------
-// IMPORTS
-// ---------------------------------------------------------------------------
-
-// API_BASE_URL and PRODUCT_CATEGORIES come from shared/config.js loaded via <script> in index.html
-const { API_BASE_URL, PRODUCT_CATEGORIES } = window;
-
-// initARViewer is loaded as a module import below.
-// Using a module-level import so it resolves correctly relative to app.js.
 import { initARViewer } from '/ar-engine/ar-engine.js';
 
-
 // ---------------------------------------------------------------------------
-// DOM ELEMENT REFERENCES
+// GLOBALS FROM SHARED FILES
 // ---------------------------------------------------------------------------
-// These IDs must match exactly what is in index.html.
-// If an ID changes in index.html, update it here too.
-
-const urlInput        = document.getElementById('url-input');         // <input> for product URL
-const analyzeBtn      = document.getElementById('analyze-btn');       // "Analyze Product" button
-const productCard     = document.getElementById('product-card');      // Product display section
-const productName     = document.getElementById('product-name');      // Product name <h2>
-const productImage    = document.getElementById('product-image');     // Product <img>
-const productPrice    = document.getElementById('product-price');     // Price display
-const productCategory = document.getElementById('product-category');  // Category badge
-const productPlatform = document.getElementById('product-platform');  // "Found on Amazon India"
-const productDims     = document.getElementById('product-dimensions');// Dimensions string
-const viewArBtn       = document.getElementById('view-ar-btn');       // "View in AR" button
-const pricePanel      = document.getElementById('price-panel');       // Price comparison section
-const priceList       = document.getElementById('price-list');        // <ul> for price rows
-const arContainer     = document.getElementById('ar-container');      // AR viewer wrapper div
-const loadingSpinner  = document.getElementById('loading-spinner');   // Loading indicator
-const errorMessage    = document.getElementById('error-message');     // Error display area
-const errorText       = document.getElementById('error-text');        // Error text span
-
+const { API_BASE_URL, ROOM_PRESETS, STYLE_OPTIONS, BUDGET_OPTIONS } = window;
 
 // ---------------------------------------------------------------------------
 // STATE
 // ---------------------------------------------------------------------------
-// Umar: you can store the current product data here after fetching it,
-// so other functions (displayPrices, AR) can access it without re-fetching.
-
-let currentProduct = null; // Will hold the product JSON after extractProduct succeeds
-
+let selectedRoom   = null;  // ROOM_PRESETS entry
+let selectedStyle  = null;  // string: 'modern', 'minimalist', etc.
+let selectedBudget = null;  // BUDGET_OPTIONS entry
 
 // ---------------------------------------------------------------------------
-// EVENT LISTENERS
+// DOM REFERENCES
 // ---------------------------------------------------------------------------
-
-/**
- * "Analyze Product" button click → triggers the full product fetch flow.
- * The URL in #url-input is read and passed to handleUrlSubmit().
- */
-analyzeBtn.addEventListener('click', () => {
-  const url = urlInput.value.trim();
-  handleUrlSubmit(url);
-});
-
-/**
- * Also trigger on Enter key press inside the URL input field.
- */
-urlInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
-    const url = urlInput.value.trim();
-    handleUrlSubmit(url);
-  }
-});
-
-/**
- * "View in AR" button click → triggers AR viewer with current product data.
- * Only wired after displayProduct() has been called (currentProduct is set).
- */
-viewArBtn.addEventListener('click', () => {
-  if (!currentProduct) return;
-
-  // TODO (Umar): Remove .hidden from #ar-container before calling initARViewer
-  // arContainer.classList.remove('hidden');
-
-  initARViewer(
-    currentProduct.glbUrl,       // string: URL to the .glb model
-    currentProduct.dimensions,   // object: { lengthCm, widthCm, heightCm, raw }
-    'ar-container'               // string: the container div ID
-  );
-});
-
+const roomGrid       = document.getElementById('room-grid');
+const styleGrid      = document.getElementById('style-grid');
+const budgetGrid     = document.getElementById('budget-grid');
+const roomLabelDisp  = document.getElementById('room-label-display');
+const dimLength      = document.getElementById('dim-length');
+const dimWidth       = document.getElementById('dim-width');
+const dimHeight      = document.getElementById('dim-height');
+const lengthCmEl     = document.getElementById('length-cm');
+const widthCmEl      = document.getElementById('width-cm');
+const heightCmEl     = document.getElementById('height-cm');
+const roomVizBox     = document.getElementById('room-viz-box');
+const roomVizLabel   = document.getElementById('room-viz-label');
+const recommendBtn   = document.getElementById('recommend-btn');
+const recommendText  = document.getElementById('recommend-btn-text');
+const recommendSpinner = document.getElementById('recommend-spinner');
+const resultsSection = document.getElementById('results');
+const resultsTitle   = document.getElementById('results-title');
+const resultsSubtitle= document.getElementById('results-subtitle');
+const productsGrid   = document.getElementById('products-grid');
+const errorMessage   = document.getElementById('error-message');
+const errorText      = document.getElementById('error-text');
+const arModal        = document.getElementById('ar-modal');
+const arModalTitle   = document.getElementById('ar-modal-title');
+const arContainer    = document.getElementById('ar-container');
+const arModalInfo    = document.getElementById('ar-modal-info');
+const arBuyBtn       = document.getElementById('ar-buy-btn');
 
 // ---------------------------------------------------------------------------
-// CORE FUNCTIONS
+// WIZARD STEP NAVIGATION
 // ---------------------------------------------------------------------------
 
 /**
- * handleUrlSubmit(url)
- * PURPOSE: Validates URL, calls APIs, and updates UI state.
+ * goToStep(n) — called from inline onclick in index.html
+ * Shows the target panel and updates the step indicator dots.
  */
-async function handleUrlSubmit(url) {
-  // 1. Validation
-  if (!url) {
-    showError("Please paste a product URL to analyze.");
+window.goToStep = function(n) {
+  // Validate step 1 → 2 transition
+  if (n === 2 && !selectedRoom) {
+    showError('Please select a room type first.');
     return;
   }
-  try {
-    new URL(url); // basic validity check
-  } catch (e) {
-    showError("Invalid URL format. Please include http:// or https://");
-    return;
-  }
-
-  // 2. UI State Reset
-  hideError();
-  productCard.classList.add('hidden');
-  pricePanel.classList.add('hidden');
-  arContainer.classList.add('hidden');
-  
-  // 3. Show Spinner
-  loadingSpinner.classList.remove('hidden');
-
-  try {
-    // 4. Call /extractProduct
-    const extractRes = await fetch(`${API_BASE_URL}/extractProduct`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
-    });
-    
-    if (!extractRes.ok) {
-      // Read the actual error message from the backend response
-      let errMsg = 'Failed to fetch product data.';
-      try {
-        const errBody = await extractRes.json();
-        if (errBody.error) errMsg = errBody.error;
-      } catch (_) {}
-      throw new Error(errMsg);
-    }
-    const productData = await extractRes.json();
-
-    if (productData.error) {
-      showError(productData.error);
-      loadingSpinner.classList.add('hidden');
+  // Validate step 2 → 3 transition
+  if (n === 3) {
+    const l = parseFloat(dimLength.value);
+    const w = parseFloat(dimWidth.value);
+    const h = parseFloat(dimHeight.value);
+    if (!l || !w || !h || l < 5 || w < 5 || h < 7) {
+      showError('Please enter valid room dimensions (min 5 × 5 × 7 ft).');
       return;
     }
-
-    // 5. Success! Save and Display
-    currentProduct = productData;
-    displayProduct(currentProduct);
-
-    // 6. Fetch Prices asynchronously
-    const pricesRes = await fetch(`${API_BASE_URL}/getPrices?productName=${encodeURIComponent(currentProduct.name)}`);
-    if (pricesRes.ok) {
-      const pricesData = await pricesRes.json();
-      if (Array.isArray(pricesData) && pricesData.length > 0) {
-        displayPrices(pricesData);
-      }
-    }
-  } catch (error) {
-    console.error("Error during extraction:", error);
-    showError("An unexpected error occurred while analyzing the product.");
-  } finally {
-    // 7. Hide Spinner
-    loadingSpinner.classList.add('hidden');
   }
-}
+  hideError();
 
-/**
- * displayProduct(product)
- */
-async function displayProduct(product) {
-  productName.textContent = product.name || "Unknown Product";
-  productImage.src = product.imageUrl || "";
-  productImage.alt = product.name || "Product Image";
-  productPrice.textContent = formatPrice(product.originalPrice);
-  productCategory.textContent = product.category ? product.category.toUpperCase() : "DÉCOR";
-  productPlatform.textContent = `Found on ${product.platform}`;
-  
-  if (product.dimensions && product.dimensions.raw) {
-    productDims.textContent = product.dimensions.raw;
-  } else {
-    productDims.textContent = "Dimensions unknown";
-  }
+  document.querySelectorAll('.wizard__panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`step-${n}`).classList.add('active');
 
-  // Show with fade-in animation
-  productCard.classList.remove('hidden');
-  productCard.classList.add('fade-in');
-}
-
-/**
- * displayPrices(prices)
- */
-async function displayPrices(prices) {
-  priceList.innerHTML = '';
-  
-  // Find the lowest price
-  let minPrice = Infinity;
-  prices.forEach(p => {
-    if (p.price_inr < minPrice) minPrice = p.price_inr;
+  document.querySelectorAll('.wizard__step').forEach((dot, i) => {
+    dot.classList.remove('active', 'done');
+    if (i + 1 < n)  dot.classList.add('done');
+    if (i + 1 === n) dot.classList.add('active');
   });
+};
 
-  prices.forEach(priceObj => {
-    const isBest = priceObj.price_inr === minPrice;
-    const stockClass = priceObj.in_stock ? 'stock-in' : 'stock-out';
-    const stockText = priceObj.in_stock ? 'In Stock' : 'Out of Stock';
-    const highlightClass = isBest ? 'price-panel__item--best' : '';
+// ---------------------------------------------------------------------------
+// STEP 1 — ROOM GRID
+// ---------------------------------------------------------------------------
 
-    const li = document.createElement('li');
-    li.className = `price-panel__item ${highlightClass}`;
-    
-    li.innerHTML = `
-      <span class="price-platform">${priceObj.platform}</span>
-      <span class="price-stock ${stockClass}">${stockText}</span>
-      <span class="price-amount">${formatPrice(priceObj.price_inr)}</span>
-      <a href="${priceObj.url}" target="_blank" rel="noopener noreferrer" class="price-buy-btn">Buy Now</a>
+function renderRoomGrid() {
+  roomGrid.innerHTML = '';
+  ROOM_PRESETS.forEach(room => {
+    const card = document.createElement('div');
+    card.className = 'room-card';
+    card.id = `room-card-${room.id}`;
+    card.innerHTML = `
+      <div class="room-card__emoji">${room.emoji}</div>
+      <div class="room-card__label">${room.label}</div>
+      <div class="room-card__desc">${room.description}</div>
     `;
-    priceList.appendChild(li);
+    card.addEventListener('click', () => selectRoom(room, card));
+    roomGrid.appendChild(card);
   });
-
-  // Show with fade-in animation
-  pricePanel.classList.remove('hidden');
-  pricePanel.classList.add('fade-in');
 }
 
+function selectRoom(room, cardEl) {
+  // Deselect all
+  document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
+  cardEl.classList.add('selected');
+  selectedRoom = room;
+
+  // Pre-fill dims with room defaults (convert cm → ft, rounded)
+  dimLength.value = Math.round(room.defaultDims.lengthCm / 30.48);
+  dimWidth.value  = Math.round(room.defaultDims.widthCm  / 30.48);
+  dimHeight.value = Math.round(room.defaultDims.heightCm / 30.48);
+  updateDimDisplay();
+
+  // Update room label on step 2
+  roomLabelDisp.textContent = `${room.emoji} ${room.label} — adjust to your actual measurements`;
+
+  // Auto advance after brief delay for nice UX
+  setTimeout(() => goToStep(2), 280);
+}
 
 // ---------------------------------------------------------------------------
-// HELPER FUNCTIONS
+// STEP 2 — DIMENSIONS
 // ---------------------------------------------------------------------------
 
-function showError(message) {
-  errorText.textContent = message;
+const FT_TO_CM = 30.48;
+
+function ftToCm(ft) { return Math.round(parseFloat(ft) * FT_TO_CM); }
+
+function updateDimDisplay() {
+  const l = parseFloat(dimLength.value) || 0;
+  const w = parseFloat(dimWidth.value)  || 0;
+  const h = parseFloat(dimHeight.value) || 0;
+
+  lengthCmEl.textContent = `${ftToCm(l)} cm`;
+  widthCmEl.textContent  = `${ftToCm(w)} cm`;
+  heightCmEl.textContent = `${ftToCm(h)} cm`;
+  roomVizLabel.textContent = `${l} × ${w} ft`;
+
+  // Scale the room visualiser box proportionally (max 280×180px)
+  const maxW = 280, maxH = 180;
+  const ratio = l > 0 && w > 0 ? Math.min(maxW / l, maxH / w) : 20;
+  roomVizBox.style.width  = `${Math.max(80, Math.min(maxW, l * ratio))}px`;
+  roomVizBox.style.height = `${Math.max(60, Math.min(maxH, w * ratio))}px`;
+}
+
+[dimLength, dimWidth, dimHeight].forEach(el => {
+  el.addEventListener('input', updateDimDisplay);
+});
+
+// ---------------------------------------------------------------------------
+// STEP 3 — STYLE + BUDGET
+// ---------------------------------------------------------------------------
+
+function renderStyleGrid() {
+  styleGrid.innerHTML = '';
+  STYLE_OPTIONS.forEach(opt => {
+    const chip = document.createElement('button');
+    chip.className = 'style-chip';
+    chip.id = `style-${opt.id}`;
+    chip.textContent = `${opt.emoji} ${opt.label}`;
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      selectedStyle = opt.id;
+    });
+    styleGrid.appendChild(chip);
+  });
+}
+
+function renderBudgetGrid() {
+  budgetGrid.innerHTML = '';
+  BUDGET_OPTIONS.forEach(opt => {
+    const chip = document.createElement('button');
+    chip.className = 'budget-chip';
+    chip.id = `budget-${opt.id}`;
+    chip.textContent = opt.label;
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.budget-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      selectedBudget = opt;
+    });
+    budgetGrid.appendChild(chip);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// GET RECOMMENDATIONS
+// ---------------------------------------------------------------------------
+
+recommendBtn.addEventListener('click', handleRecommend);
+
+async function handleRecommend() {
+  if (!selectedStyle) {
+    showError('Please pick a style preference.');
+    return;
+  }
+  if (!selectedBudget) {
+    showError('Please pick a budget range.');
+    return;
+  }
+  hideError();
+
+  // Build query params
+  const lengthCm = ftToCm(dimLength.value);
+  const widthCm  = ftToCm(dimWidth.value);
+  const heightCm = ftToCm(dimHeight.value);
+  const budget   = selectedBudget.max;
+
+  // Show spinner
+  recommendText.classList.add('hidden');
+  recommendSpinner.classList.remove('hidden');
+  recommendBtn.disabled = true;
+
+  // Scroll to results area while loading
+  resultsSection.classList.remove('hidden');
+  productsGrid.innerHTML = '<div class="loading-cards"></div>';
+  resultsTitle.textContent = 'Finding the best picks…';
+  resultsSubtitle.textContent = '';
+  resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  try {
+    const params = new URLSearchParams({
+      roomType:  selectedRoom.id,
+      lengthCm,
+      widthCm,
+      style:     selectedStyle,
+      budget,
+    });
+
+    const res = await fetch(`${API_BASE_URL}/getRecommendations?${params}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Server error ${res.status}`);
+    }
+    const products = await res.json();
+
+    displayRecommendations(products);
+  } catch (err) {
+    console.error('[App] getRecommendations error:', err);
+    showError(`Could not fetch recommendations: ${err.message}`);
+    resultsSection.classList.add('hidden');
+  } finally {
+    recommendText.classList.remove('hidden');
+    recommendSpinner.classList.add('hidden');
+    recommendBtn.disabled = false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// RENDER RESULTS
+// ---------------------------------------------------------------------------
+
+function displayRecommendations(products) {
+  productsGrid.innerHTML = '';
+
+  const roomLabel  = selectedRoom.label;
+  const styleLabel = STYLE_OPTIONS.find(s => s.id === selectedStyle)?.label || selectedStyle;
+
+  resultsTitle.textContent    = `Top picks for your ${roomLabel}`;
+  resultsSubtitle.textContent = `${styleLabel} style · ${selectedBudget.label} · ${products.length} recommendations`;
+
+  if (!products.length) {
+    productsGrid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;color:var(--text2);padding:40px;">
+        <p style="font-size:40px">🔍</p>
+        <p>No products matched your filters. Try a different style or budget.</p>
+      </div>`;
+    return;
+  }
+
+  products.forEach((product, idx) => {
+    const card = buildProductCard(product, idx === 0);
+    productsGrid.appendChild(card);
+  });
+}
+
+function buildProductCard(product, isBestMatch) {
+  const card = document.createElement('div');
+  card.className = 'product-card';
+  card.style.animationDelay = `${(product._rank || 0) * 60}ms`;
+  card.classList.add('fade-in');
+
+  const score = product._score ?? 0;
+  const scorePct = Math.round(score * 100);
+  const dims = product.dimensions;
+  const dimsText = dims
+    ? `${dims.lengthCm} × ${dims.widthCm} × ${dims.heightCm} cm`
+    : '';
+
+  card.innerHTML = `
+    <div class="product-card__img-wrap">
+      <img class="product-card__img" src="${product.imageUrl}" alt="${product.name}" loading="lazy" />
+      <span class="product-card__badge">${product.category}</span>
+      ${isBestMatch ? '<span class="product-card__score">★ Best Match</span>' : `<span class="product-card__score">${scorePct}%</span>`}
+    </div>
+    <div class="product-card__body">
+      <div class="product-card__name">${product.name}</div>
+      <div class="product-card__meta">
+        <span class="product-card__price">₹${Number(product.price_inr).toLocaleString('en-IN')}</span>
+        <span class="product-card__platform">${product.platform}</span>
+      </div>
+      ${dimsText ? `<div style="font-size:11px;color:var(--text2);">📐 ${dimsText}</div>` : ''}
+      <div class="score-bar"><div class="score-bar__fill" style="width:${scorePct}%"></div></div>
+      <div class="product-card__tags">
+        ${(product.tags || []).slice(0, 3).map(t => `<span class="product-card__tag">${t}</span>`).join('')}
+      </div>
+      <div class="product-card__actions">
+        <button class="btn-ar" data-product-id="${product.id}">📱 View in AR</button>
+        <a class="btn-buy" href="${product.buyUrl}" target="_blank" rel="noopener">🛒 Buy on ${product.platform}</a>
+      </div>
+    </div>
+  `;
+
+  // View in AR button
+  card.querySelector('.btn-ar').addEventListener('click', () => openARModal(product));
+
+  return card;
+}
+
+// ---------------------------------------------------------------------------
+// AR MODAL
+// ---------------------------------------------------------------------------
+
+function openARModal(product) {
+  arModalTitle.textContent = product.name;
+  arModalInfo.textContent  = product.dimensions
+    ? `📐 ${product.dimensions.lengthCm} × ${product.dimensions.widthCm} × ${product.dimensions.heightCm} cm`
+    : '';
+  arBuyBtn.href = product.buyUrl;
+  arBuyBtn.textContent = `🛒 Buy on ${product.platform} · ₹${Number(product.price_inr).toLocaleString('en-IN')}`;
+
+  arModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  // Init the AR viewer
+  initARViewer(product.glbUrl, product.dimensions, 'ar-container');
+}
+
+window.closeARModal = function() {
+  arModal.classList.add('hidden');
+  document.body.style.overflow = '';
+  arContainer.innerHTML = '';
+};
+
+// Close on Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') window.closeARModal();
+});
+
+// ---------------------------------------------------------------------------
+// ERROR HELPERS
+// ---------------------------------------------------------------------------
+
+function showError(msg) {
+  errorText.textContent = msg;
   errorMessage.classList.remove('hidden');
-  errorMessage.classList.add('fade-in');
 }
 
 function hideError() {
   errorMessage.classList.add('hidden');
-  errorMessage.classList.remove('fade-in');
   errorText.textContent = '';
 }
 
-function formatPrice(amount) {
-  if (!amount || isNaN(amount)) return '₹ --';
-  return '₹' + Number(amount).toLocaleString('en-IN');
-}
-
 // ---------------------------------------------------------------------------
-// INITIALIZATION
+// INIT
 // ---------------------------------------------------------------------------
 
 function init() {
-  console.log('[TRIVERSE] App initialized. API base:', API_BASE_URL);
-  
-  // Add fade-in to the initial navbar & hero
-  document.querySelector('.navbar').classList.add('fade-in');
-  document.querySelector('.hero').classList.add('fade-in');
-  
-  // Make view AR button show container
-  viewArBtn.addEventListener('click', () => {
-    if (!currentProduct) return;
-    arContainer.classList.remove('hidden');
-    // The main event listener is already bound at the top of this file,
-    // it will call initARViewer there. We just ensure the container is visible.
-    // Wait, the main listener is in this file above, it doesn't remove hidden. Let me just remove hidden here.
-  });
+  console.log('[TRIVERSE] App init. API:', API_BASE_URL);
+  renderRoomGrid();
+  renderStyleGrid();
+  renderBudgetGrid();
+  updateDimDisplay();
+
+  // Animate hero on load
+  document.querySelector('.navbar')?.classList.add('fade-in');
+  document.querySelector('.hero')?.classList.add('fade-in');
 }
 
 init();
-

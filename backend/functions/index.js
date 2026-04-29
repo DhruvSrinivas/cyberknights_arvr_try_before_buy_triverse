@@ -3,8 +3,9 @@
  * OWNER: Dhruv
  *
  * ENDPOINTS:
- *   POST /extractProduct  — extracts product data from a URL (Amazon/Flipkart)
- *   GET  /getPrices       — fetches price comparison results for a product name
+ *   POST /extractProduct      — extracts product data from a URL (Amazon/Flipkart)
+ *   GET  /getPrices           — fetches price comparison results for a product name
+ *   GET  /getRecommendations  — ML-scored product recommendations from preset catalog
  *
  * STACK:
  *   firebase-functions v2, firebase-admin, cors, md5
@@ -17,7 +18,7 @@
  *     -H "Content-Type: application/json" \
  *     -d '{"url":"https://www.amazon.in/dp/B08XYZ"}'
  *
- *   curl "http://127.0.0.1:5001/YOUR_PROJECT_ID/us-central1/getPrices?productName=Wakefit+Sofa"
+ *   curl "http://127.0.0.1:5001/YOUR_PROJECT_ID/us-central1/getRecommendations?roomType=living&lengthCm=400&widthCm=300&style=modern&budget=30000"
  */
 
 // ---------------------------------------------------------------------------
@@ -34,8 +35,10 @@ const md5            = require('md5');
 const { extractProduct: extractProductData } = require('../../data-service/extractor.js');
 const { getPrices: getPricesData }           = require('../../data-service/priceCompare.js');
 
-// Shared config — collection names and cache TTLs
+// Shared config — collection names, cache TTLs, product catalog, room presets
 const { FIRESTORE_COLLECTIONS, CACHE_TTL_MS } = require('../../shared/config.js');
+const { PRODUCT_CATALOG }                      = require('../../shared/productCatalog.js');
+const { ROOM_PRESETS }                         = require('../../shared/roomPresets.js');
 
 
 // ---------------------------------------------------------------------------
@@ -421,3 +424,173 @@ exports.getPrices = onRequest(
     });
   }
 );
+
+
+// ---------------------------------------------------------------------------
+// CLOUD FUNCTION 3: getRecommendations
+// GET /getRecommendations?roomType=living&lengthCm=400&widthCm=300&style=modern&budget=30000
+// ---------------------------------------------------------------------------
+
+/**
+ * scoreProduct(product, params)
+ *
+ * Rule-based ML scoring pipeline.
+ * Returns a score in [0, 1].
+ *
+ * score = (spaceScore × 0.25) + (styleScore × 0.35) + (budgetScore × 0.25) + (roomTypeScore × 0.15)
+ *
+ * spaceScore:    1.0 if footprint < 20% of room area, linearly decays to 0 at 80%
+ * styleScore:    1.0 if style tag matches, 0.0 otherwise
+ * budgetScore:   1.0 if price <= budget, 0.5 at 125% of budget, 0.0 at 200%+
+ * roomTypeScore: 1.0 if roomType in product.roomTypes, 0.5 if 'any', 0.0 otherwise
+ *
+ * @param {Object} product  - Product entry from PRODUCT_CATALOG
+ * @param {Object} params   - { roomType, lengthCm, widthCm, style, budget }
+ * @returns {number}        - Score in [0, 1]
+ */
+function scoreProduct(product, { roomType, lengthCm, widthCm, style, budget }) {
+  // ── spaceScore ──────────────────────────────────────────────────────────
+  const roomAreaCm2    = lengthCm * widthCm;
+  const productAreaCm2 = (product.dimensions?.lengthCm || 0) * (product.dimensions?.widthCm || 0);
+  let spaceScore = 1.0;
+  if (roomAreaCm2 > 0 && productAreaCm2 > 0) {
+    const occupancyRatio = productAreaCm2 / roomAreaCm2;
+    if (occupancyRatio >= 0.8) {
+      spaceScore = 0.0;
+    } else if (occupancyRatio > 0.2) {
+      // Linear decay: 1.0 at 0.2 → 0.0 at 0.8
+      spaceScore = Math.max(0, 1 - (occupancyRatio - 0.2) / 0.6);
+    }
+  }
+
+  // ── styleScore ───────────────────────────────────────────────────────────
+  const styleScore = (product.styles || []).includes(style) ? 1.0 : 0.0;
+
+  // ── budgetScore ──────────────────────────────────────────────────────────
+  const price = product.price_inr || 0;
+  let budgetScore = 1.0;
+  if (price > budget) {
+    const overshoot = price / budget; // e.g. 1.25 = 25% over
+    if (overshoot >= 2.0) {
+      budgetScore = 0.0;
+    } else {
+      budgetScore = Math.max(0, 1 - (overshoot - 1.0));
+    }
+  }
+
+  // ── roomTypeScore ─────────────────────────────────────────────────────────
+  const roomTypes = product.roomTypes || [];
+  let roomTypeScore = 0.0;
+  if (roomTypes.includes(roomType))  roomTypeScore = 1.0;
+  else if (roomTypes.includes('any')) roomTypeScore = 0.5;
+
+  // ── Weighted sum ─────────────────────────────────────────────────────────
+  const score =
+    spaceScore    * 0.25 +
+    styleScore    * 0.35 +
+    budgetScore   * 0.25 +
+    roomTypeScore * 0.15;
+
+  return parseFloat(score.toFixed(4));
+}
+
+/**
+ * getRecommendations
+ *
+ * Scores all products in PRODUCT_CATALOG against the user's room params,
+ * sorts by score descending, returns the top 5.
+ * No scraping, no Firestore needed — all from the preset catalog.
+ *
+ * Query params:
+ *   roomType  (string) — e.g. 'living'
+ *   lengthCm  (number) — room length in cm
+ *   widthCm   (number) — room width in cm
+ *   style     (string) — e.g. 'modern'
+ *   budget    (number) — max price in INR
+ */
+exports.getRecommendations = onRequest(
+  {
+    timeoutSeconds: 10,
+    memory: '128MiB',
+    region: 'us-central1',
+  },
+  (req, res) => {
+    corsHandler(req, res, async () => {
+      // ── Preflight ──────────────────────────────────────────────────────────
+      if (req.method === 'OPTIONS') {
+        res.status(204).send('');
+        return;
+      }
+
+      // ── Rate limit ─────────────────────────────────────────────────────────
+      const clientIp = getClientIp(req);
+      if (!checkRateLimit(clientIp)) {
+        return res.status(429).json({ error: 'Too many requests. Please slow down.' });
+      }
+
+      // ── Method guard ───────────────────────────────────────────────────────
+      if (req.method !== 'GET') {
+        return res.status(405).json({ error: 'Method not allowed. Use GET.' });
+      }
+
+      // ── Parse + validate query params ──────────────────────────────────────
+      const { roomType, style } = req.query;
+      const lengthCm = parseFloat(req.query.lengthCm);
+      const widthCm  = parseFloat(req.query.widthCm);
+      const budget   = parseFloat(req.query.budget);
+
+      const validRoomTypes = ROOM_PRESETS.map(r => r.id);
+      const VALID_STYLES   = ['modern', 'minimalist', 'bohemian', 'industrial', 'traditional', 'scandinavian'];
+
+      if (!roomType || !validRoomTypes.includes(roomType)) {
+        return res.status(400).json({
+          error: `roomType is required. Valid values: ${validRoomTypes.join(', ')}`,
+        });
+      }
+      if (!style || !VALID_STYLES.includes(style)) {
+        return res.status(400).json({
+          error: `style is required. Valid values: ${VALID_STYLES.join(', ')}`,
+        });
+      }
+      if (!lengthCm || !widthCm || lengthCm < 50 || widthCm < 50) {
+        return res.status(400).json({
+          error: 'lengthCm and widthCm are required and must be at least 50 cm.',
+        });
+      }
+      if (!budget || budget < 500) {
+        return res.status(400).json({
+          error: 'budget is required and must be at least ₹500.',
+        });
+      }
+
+      const params = { roomType, lengthCm, widthCm, style, budget };
+      console.log('[getRecommendations] Params:', params);
+
+      try {
+        // ── Score all products ────────────────────────────────────────────────
+        const scored = PRODUCT_CATALOG
+          .map((product, idx) => ({
+            ...product,
+            price_inr: product.price_inr,  // expose price_inr top-level for frontend
+            _score: scoreProduct(product, params),
+            _rank:  idx,
+          }))
+          .filter(p => p._score > 0)        // exclude zero-score products
+          .sort((a, b) => b._score - a._score)
+          .slice(0, 5);                      // top 5
+
+        console.log(`[getRecommendations] Returning ${scored.length} results for roomType=${roomType}, style=${style}`);
+
+        return res.status(200).json(scored);
+
+      } catch (error) {
+        console.error('[getRecommendations] Error:', error.message);
+        return res.status(500).json({
+          error: 'Recommendation engine failed.',
+          details: error.message,
+        });
+      }
+    });
+  }
+);
+
