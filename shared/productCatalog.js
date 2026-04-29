@@ -2,10 +2,34 @@
  * shared/productCatalog.js — TRIVERSE Product Preset Catalog
  * Overhauled to ensure 1:1 mapping with distinct 3D models.
  * Includes Caviar-level luxury descriptions for high-end items.
+ *
+ * 20 products used by the ML recommendation engine.
+ *
+ * GLB models available (KhronosGroup glTF samples):
+ *   GlamVelvetSofa.glb  → sofa / couch / seating
+ *   SheenChair.glb      → chair / accent chair / armchair
+ *   IridescenceLamp.glb → lamp / light / floor lamp
+ *
+ * Products are named to match their 3D model so the AR viewer makes sense.
+ * Prices are spread across all 4 budget tiers:
+ *   Under ₹10K  → items ≤ 9,999
+ *   ₹10K–₹30K  → items 10,000–29,999
+ *   ₹30K–₹75K  → items 30,000–74,999
+ *   ₹75K+       → items ≥ 75,000
+ *
+ * Dual export: CommonJS (backend) + browser global (frontend).
  */
 
+const SOFA_GLB  = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb';
+const CHAIR_GLB = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb';
+const LAMP_GLB  = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb';
+
 const PRODUCT_CATALOG = [
+
+  // ── SOFAS (GlamVelvetSofa model) ──────────────────────────────────────────
+
   {
+
     "id": "furn-01",
     "name": "Modern Velvet 3-Seater Sofa",
     "category": "furniture",
@@ -274,7 +298,297 @@ const PRODUCT_CATALOG = [
     "buyUrl": "https://amazon.in/dp/B08GOLDLAMP",
     "tags": ["luxury", "gold", "lamp"],
     "description": "An artifact of profound prestige. Hand-gilded in 24-karat gold with precision micro-engineering, this elite luminaire is not merely a light source, but a testament to unimaginable wealth and uncompromising taste."
-  }
+  },
+  {
+    id: 'sofa-01',
+    name: 'Glam Velvet 3-Seater Sofa — Teal',
+    category: 'furniture',
+    styles: ['modern', 'minimalist'],
+    roomTypes: ['living', 'bedroom'],
+    price_inr: 28999,                          // ₹10K–₹30K tier
+    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Glam+Velvet+Sofa+Teal',
+    glbUrl: SOFA_GLB,
+    dimensions: { lengthCm: 210, widthCm: 85, heightCm: 90 },
+    platform: 'Amazon',
+    buyUrl: 'https://www.amazon.in/s?k=velvet+3+seater+sofa',
+    tags: ['sofa', 'velvet', '3-seater'],
+  },
+  {
+    id: 'sofa-02',
+    name: 'Glam Velvet 2-Seater Loveseat — Charcoal',
+    category: 'furniture',
+    styles: ['modern', 'industrial'],
+    roomTypes: ['living', 'study'],
+    price_inr: 18500,                          // ₹10K–₹30K tier
+    imageUrl: 'https://placehold.co/600x400/3D3D3D/FFFFFF?text=Velvet+Loveseat+Charcoal',
+    glbUrl: SOFA_GLB,
+    dimensions: { lengthCm: 155, widthCm: 80, heightCm: 88 },
+    platform: 'Flipkart',
+    buyUrl: 'https://www.flipkart.com/search?q=2+seater+velvet+sofa',
+    tags: ['sofa', 'loveseat', '2-seater'],
+  },
+  {
+    id: 'sofa-03',
+    name: 'Glam Velvet L-Shape Corner Sofa — Rust',
+    category: 'furniture',
+    styles: ['bohemian', 'traditional'],
+    roomTypes: ['living'],
+    price_inr: 54999,                          // ₹30K–₹75K tier
+    imageUrl: 'https://placehold.co/600x400/C05A3A/FFFFFF?text=L-Shape+Corner+Sofa+Rust',
+    glbUrl: SOFA_GLB,
+    dimensions: { lengthCm: 270, widthCm: 170, heightCm: 90 },
+    platform: 'Pepperfry',
+    buyUrl: 'https://www.pepperfry.com/sofas.html',
+    tags: ['sofa', 'L-shape', 'corner'],
+  },
+  {
+    id: 'sofa-04',
+    name: 'Glam Velvet Luxury Sectional Sofa — Pearl',
+    category: 'furniture',
+    styles: ['modern', 'scandinavian'],
+    roomTypes: ['living'],
+    price_inr: 89999,                          // ₹75K+ tier
+    imageUrl: 'https://placehold.co/600x400/F0EDE8/333333?text=Luxury+Sectional+Pearl',
+    glbUrl: SOFA_GLB,
+    dimensions: { lengthCm: 320, widthCm: 200, heightCm: 92 },
+    platform: 'UrbanLadder',
+    buyUrl: 'https://www.urbanladder.com/sofas',
+    tags: ['sofa', 'sectional', 'luxury'],
+  },
+  {
+    id: 'sofa-05',
+    name: 'Compact Velvet Studio Sofa — Forest Green',
+    category: 'furniture',
+    styles: ['minimalist', 'scandinavian'],
+    roomTypes: ['bedroom', 'study'],
+    price_inr: 8999,                           // Under ₹10K tier
+    imageUrl: 'https://placehold.co/600x400/2D6A4F/FFFFFF?text=Studio+Sofa+Green',
+    glbUrl: SOFA_GLB,
+    dimensions: { lengthCm: 130, widthCm: 75, heightCm: 82 },
+    platform: 'Amazon',
+    buyUrl: 'https://www.amazon.in/s?k=compact+sofa+studio',
+    tags: ['sofa', 'compact', 'studio'],
+  },
+
+  // ── CHAIRS (SheenChair model) ─────────────────────────────────────────────
+
+  {
+    id: 'chair-01',
+    name: 'Sheen Fabric Accent Chair — Natural',
+    category: 'furniture',
+    styles: ['scandinavian', 'minimalist'],
+    roomTypes: ['living', 'bedroom'],
+    price_inr: 8500,                           // Under ₹10K tier
+    imageUrl: 'https://placehold.co/600x400/C4A882/333333?text=Sheen+Accent+Chair+Natural',
+    glbUrl: CHAIR_GLB,
+    dimensions: { lengthCm: 70, widthCm: 70, heightCm: 85 },
+    platform: 'Flipkart',
+    buyUrl: 'https://www.flipkart.com/search?q=accent+chair+fabric',
+    tags: ['chair', 'accent', 'fabric'],
+  },
+  {
+    id: 'chair-02',
+    name: 'Sheen Fabric Lounge Chair — Ocean Blue',
+    category: 'furniture',
+    styles: ['modern', 'industrial'],
+    roomTypes: ['living', 'study'],
+    price_inr: 14999,                          // ₹10K–₹30K tier
+    imageUrl: 'https://placehold.co/600x400/2E4057/FFFFFF?text=Lounge+Chair+Ocean+Blue',
+    glbUrl: CHAIR_GLB,
+    dimensions: { lengthCm: 80, widthCm: 78, heightCm: 90 },
+    platform: 'Amazon',
+    buyUrl: 'https://www.amazon.in/s?k=lounge+chair+blue',
+    tags: ['chair', 'lounge', 'armchair'],
+  },
+  {
+    id: 'chair-03',
+    name: 'Sheen Velvet Wingback Chair — Terracotta',
+    category: 'furniture',
+    styles: ['traditional', 'bohemian'],
+    roomTypes: ['living', 'bedroom'],
+    price_inr: 22500,                          // ₹10K–₹30K tier
+    imageUrl: 'https://placehold.co/600x400/C05A3A/FFFFFF?text=Wingback+Chair+Terracotta',
+    glbUrl: CHAIR_GLB,
+    dimensions: { lengthCm: 82, widthCm: 80, heightCm: 105 },
+    platform: 'Pepperfry',
+    buyUrl: 'https://www.pepperfry.com/chairs.html',
+    tags: ['chair', 'wingback', 'velvet'],
+  },
+  {
+    id: 'chair-04',
+    name: 'Sheen Designer Recliner Chair — Charcoal',
+    category: 'furniture',
+    styles: ['modern', 'industrial'],
+    roomTypes: ['living', 'study'],
+    price_inr: 38000,                          // ₹30K–₹75K tier
+    imageUrl: 'https://placehold.co/600x400/3D3D3D/FFFFFF?text=Recliner+Chair+Charcoal',
+    glbUrl: CHAIR_GLB,
+    dimensions: { lengthCm: 90, widthCm: 85, heightCm: 100 },
+    platform: 'UrbanLadder',
+    buyUrl: 'https://www.urbanladder.com/recliners',
+    tags: ['chair', 'recliner', 'motorised'],
+  },
+  {
+    id: 'chair-05',
+    name: 'Sheen Premium Egg Chair with Ottoman — Pearl',
+    category: 'furniture',
+    styles: ['modern', 'scandinavian'],
+    roomTypes: ['living', 'bedroom'],
+    price_inr: 76000,                          // ₹75K+ tier
+    imageUrl: 'https://placehold.co/600x400/F0EDE8/333333?text=Egg+Chair+Pearl',
+    glbUrl: CHAIR_GLB,
+    dimensions: { lengthCm: 95, widthCm: 90, heightCm: 115 },
+    platform: 'Amazon',
+    buyUrl: 'https://www.amazon.in/s?k=egg+chair+premium',
+    tags: ['chair', 'egg chair', 'ottoman'],
+  },
+
+  // ── LAMPS (IridescenceLamp model) ─────────────────────────────────────────
+
+  {
+    id: 'lamp-01',
+    name: 'Iridescence Arc Floor Lamp — Brushed Gold',
+    category: 'items',
+    styles: ['modern', 'minimalist'],
+    roomTypes: ['living', 'bedroom'],
+    price_inr: 4999,                           // Under ₹10K tier
+    imageUrl: 'https://placehold.co/600x400/C4A882/333333?text=Arc+Floor+Lamp+Gold',
+    glbUrl: LAMP_GLB,
+    dimensions: { lengthCm: 35, widthCm: 35, heightCm: 165 },
+    platform: 'Amazon',
+    buyUrl: 'https://www.amazon.in/s?k=arc+floor+lamp+gold',
+    tags: ['lamp', 'floor lamp', 'arc'],
+  },
+  {
+    id: 'lamp-02',
+    name: 'Iridescence Tripod Floor Lamp — Matte Black',
+    category: 'items',
+    styles: ['industrial', 'modern'],
+    roomTypes: ['living', 'study'],
+    price_inr: 7500,                           // Under ₹10K tier
+    imageUrl: 'https://placehold.co/600x400/1A1A1A/FFFFFF?text=Tripod+Floor+Lamp+Black',
+    glbUrl: LAMP_GLB,
+    dimensions: { lengthCm: 40, widthCm: 40, heightCm: 155 },
+    platform: 'Flipkart',
+    buyUrl: 'https://www.flipkart.com/search?q=tripod+floor+lamp',
+    tags: ['lamp', 'tripod', 'industrial'],
+  },
+  {
+    id: 'lamp-03',
+    name: 'Iridescence Designer Table Lamp — Teal',
+    category: 'items',
+    styles: ['bohemian', 'traditional'],
+    roomTypes: ['bedroom', 'study', 'dining'],
+    price_inr: 2800,                           // Under ₹10K tier
+    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Table+Lamp+Teal',
+    glbUrl: LAMP_GLB,
+    dimensions: { lengthCm: 25, widthCm: 25, heightCm: 55 },
+    platform: 'Amazon',
+    buyUrl: 'https://www.amazon.in/s?k=designer+table+lamp+teal',
+    tags: ['lamp', 'table lamp', 'bedside'],
+  },
+  {
+    id: 'lamp-04',
+    name: 'Iridescence Smart LED Floor Lamp — White',
+    category: 'items',
+    styles: ['modern', 'scandinavian', 'minimalist'],
+    roomTypes: ['living', 'bedroom', 'study'],
+    price_inr: 12999,                          // ₹10K–₹30K tier
+    imageUrl: 'https://placehold.co/600x400/F0EDE8/333333?text=Smart+LED+Floor+Lamp',
+    glbUrl: LAMP_GLB,
+    dimensions: { lengthCm: 30, widthCm: 30, heightCm: 160 },
+    platform: 'Amazon',
+    buyUrl: 'https://www.amazon.in/s?k=smart+led+floor+lamp',
+    tags: ['lamp', 'smart', 'LED', 'dimmable'],
+  },
+  {
+    id: 'lamp-05',
+    name: 'Iridescence Luxury Chandelier Floor Lamp — Brass',
+    category: 'items',
+    styles: ['traditional', 'bohemian'],
+    roomTypes: ['living', 'dining'],
+    price_inr: 32000,                          // ₹30K–₹75K tier
+    imageUrl: 'https://placehold.co/600x400/B8860B/FFFFFF?text=Chandelier+Floor+Lamp+Brass',
+    glbUrl: LAMP_GLB,
+    dimensions: { lengthCm: 50, widthCm: 50, heightCm: 180 },
+    platform: 'Pepperfry',
+    buyUrl: 'https://www.pepperfry.com/lamps.html',
+    tags: ['lamp', 'chandelier', 'brass', 'luxury'],
+  },
+
+  // ── SOFA + CHAIR COMBOS — higher price tiers ──────────────────────────────
+
+  {
+    id: 'set-01',
+    name: 'Velvet Sofa + Accent Chair Set — Teal & Natural',
+    category: 'furniture',
+    styles: ['modern', 'scandinavian'],
+    roomTypes: ['living'],
+    price_inr: 42000,                          // ₹30K–₹75K tier
+    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Sofa+%2B+Chair+Set',
+    glbUrl: SOFA_GLB,
+    dimensions: { lengthCm: 210, widthCm: 85, heightCm: 90 },
+    platform: 'UrbanLadder',
+    buyUrl: 'https://www.urbanladder.com/living-room-sets',
+    tags: ['sofa', 'chair', 'set', 'combo'],
+  },
+  {
+    id: 'set-02',
+    name: 'Velvet Sofa + 2 Chairs Living Room Set — Charcoal',
+    category: 'furniture',
+    styles: ['industrial', 'modern'],
+    roomTypes: ['living'],
+    price_inr: 68000,                          // ₹30K–₹75K tier
+    imageUrl: 'https://placehold.co/600x400/3D3D3D/FFFFFF?text=Living+Room+Set+Charcoal',
+    glbUrl: SOFA_GLB,
+    dimensions: { lengthCm: 210, widthCm: 85, heightCm: 90 },
+    platform: 'Pepperfry',
+    buyUrl: 'https://www.pepperfry.com/living-room-sets.html',
+    tags: ['sofa', 'set', '3-piece', 'living room'],
+  },
+  {
+    id: 'set-03',
+    name: 'Premium Velvet Sofa Set — 3+1+1 Configuration',
+    category: 'furniture',
+    styles: ['traditional', 'modern'],
+    roomTypes: ['living'],
+    price_inr: 95000,                          // ₹75K+ tier
+    imageUrl: 'https://placehold.co/600x400/7B2D26/FFFFFF?text=Premium+Sofa+Set+3%2B1%2B1',
+    glbUrl: SOFA_GLB,
+    dimensions: { lengthCm: 210, widthCm: 85, heightCm: 90 },
+    platform: 'UrbanLadder',
+    buyUrl: 'https://www.urbanladder.com/sofa-sets',
+    tags: ['sofa', 'set', '5-seater', 'premium'],
+  },
+  {
+    id: 'set-04',
+    name: 'Luxury Chesterfield Sofa — Deep Teal',
+    category: 'furniture',
+    styles: ['traditional', 'bohemian'],
+    roomTypes: ['living', 'study'],
+    price_inr: 9500,                           // Under ₹10K tier
+    imageUrl: 'https://placehold.co/600x400/19535F/FFFFFF?text=Chesterfield+Sofa+Teal',
+    glbUrl: SOFA_GLB,
+    dimensions: { lengthCm: 185, widthCm: 82, heightCm: 88 },
+    platform: 'Amazon',
+    buyUrl: 'https://www.amazon.in/s?k=chesterfield+sofa',
+    tags: ['sofa', 'chesterfield', 'tufted'],
+  },
+  {
+    id: 'set-05',
+    name: 'Ergonomic Study Chair with Lumbar Support — Grey',
+    category: 'furniture',
+    styles: ['minimalist', 'modern', 'industrial'],
+    roomTypes: ['study', 'bedroom'],
+    price_inr: 6200,                           // Under ₹10K tier
+    imageUrl: 'https://placehold.co/600x400/6B8089/FFFFFF?text=Ergonomic+Study+Chair',
+    glbUrl: CHAIR_GLB,
+    dimensions: { lengthCm: 65, widthCm: 65, heightCm: 95 },
+    platform: 'Flipkart',
+    buyUrl: 'https://www.flipkart.com/search?q=ergonomic+study+chair',
+    tags: ['chair', 'ergonomic', 'study', 'office'],
+  },
+
 ];
 
 // Export setup
