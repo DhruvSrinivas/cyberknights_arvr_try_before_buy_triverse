@@ -255,12 +255,21 @@ async function handleRecommend() {
     console.log('[App] Falling back to local catalog...');
     const scored = window.PRODUCT_CATALOG.map((p, idx) => {
       let score = 0;
-      if ((p.styles || []).includes(selectedStyle)) score += 0.4;
-      if ((p.roomTypes || []).includes(selectedRoom.id)) score += 0.3;
-      if (p.price_inr <= budget) score += 0.3;
+      let valid = true;
+
+      // Filter out items completely if they exceed budget!
+      if (p.price_inr > budget) valid = false;
+      
+      if ((p.styles || []).includes(selectedStyle)) score += 0.5;
+      else score -= 0.3;
+
+      if ((p.roomTypes || []).includes(selectedRoom.id)) score += 0.5;
+      else score -= 0.3;
+
+      // Bonus if close to budget
+      if (budget - p.price_inr >= 0 && budget - p.price_inr < 5000) score += 0.2;
       
       let aiText = "";
-      const scorePct = Math.round(score * 100);
       if (p.category === 'furniture') {
         aiText = `Our spatial analysis engine matched this ${p.name} with your ${Math.floor(lengthCm/30.48)}x${Math.floor(widthCm/30.48)}ft room. The piece optimizes walking paths while anchoring your ${selectedStyle} decor perfectly.`;
       } else if (p.category === 'lighting') {
@@ -269,9 +278,9 @@ async function handleRecommend() {
         aiText = `The ${p.name} was selected by our styling algorithm to introduce texture and personality to your ${selectedStyle} space without adding visual clutter.`;
       }
       
-      return { ...p, _score: score, _rank: idx, aiJustification: aiText };
+      return { ...p, _score: valid ? Math.max(0, score) : -1, _rank: idx, aiJustification: aiText };
     })
-    .filter(p => p._score > 0)
+    .filter(p => p._score >= 0)
     .sort((a, b) => b._score - a._score)
     .slice(0, 5);
 
@@ -279,7 +288,7 @@ async function handleRecommend() {
       hideError();
       displayRecommendations(scored);
     } else {
-      showError(`Could not fetch recommendations and no local matches found.`);
+      showError(`No products matched your exact budget and style. Try increasing your budget or changing your style!`);
       resultsSection.classList.add('hidden');
     }
   } finally {
@@ -352,9 +361,10 @@ function buildProductCard(product, isBestMatch) {
     </div>
     <div class="product-card__body">
       <div class="product-card__name">${product.name}</div>
-      <div class="product-card__meta">
-        <span class="product-card__price">₹${Number(product.price_inr).toLocaleString('en-IN')}</span>
-        <span class="product-card__platform">${product.platform}</span>
+      ${product.description ? `<div style="font-size:12px;color:var(--text2);line-height:1.4;margin:4px 0 8px 0;font-style:italic;">"${product.description}"</div>` : ''}
+      <div class="product-card__price-row" style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <span class="product-card__price" style="font-weight:700; color:var(--text); font-size:16px;">₹${Number(product.price_inr).toLocaleString('en-IN')}</span>
+        <span class="product-card__platform" style="color:var(--text2); font-size:12px;">${product.platform}</span>
       </div>
       ${dimsText ? `<div style="font-size:11px;color:var(--text2);">Dimensions: ${dimsText}</div>` : ''}
       <div class="score-bar"><div class="score-bar__fill" style="width:${scorePct}%"></div></div>

@@ -1,7 +1,7 @@
 /**
  * shared/productCatalog.js — TRIVERSE Product Preset Catalog
  * Overhauled to ensure 1:1 mapping with distinct 3D models.
- * Dual export: CommonJS (backend) + browser global (frontend).
+ * Includes Caviar-level luxury descriptions for high-end items.
  */
 
 const PRODUCT_CATALOG = [
@@ -11,13 +11,14 @@ const PRODUCT_CATALOG = [
     "category": "furniture",
     "styles": ["modern", "minimalist"],
     "roomTypes": ["living", "studio"],
-    "price_inr": 28999,
+    "price_inr": 89999,
     "imageUrl": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80",
     "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
     "dimensions": { "lengthCm": 210, "widthCm": 85, "heightCm": 90 },
     "platform": "Amazon",
     "buyUrl": "https://amazon.in/dp/B08XYZSOFA",
-    "tags": ["sofa", "velvet", "3-seater"]
+    "tags": ["sofa", "velvet", "3-seater"],
+    "description": "An uncompromising masterpiece of interior design. Hand-upholstered in genuine Italian velvet, this bespoke 3-seater sofa offers an unparalleled fusion of avant-garde aesthetics and supreme ergonomic comfort. Designed for the elite."
   },
   {
     "id": "furn-02",
@@ -31,7 +32,8 @@ const PRODUCT_CATALOG = [
     "dimensions": { "lengthCm": 70, "widthCm": 70, "heightCm": 85 },
     "platform": "Flipkart",
     "buyUrl": "https://flipkart.com/item/chair123",
-    "tags": ["chair", "accent", "fabric"]
+    "tags": ["chair", "accent", "fabric"],
+    "description": "A functional and stylish addition to your daily living space. Features durable fabric and a clean, minimalist silhouette."
   },
   {
     "id": "decor-01",
@@ -39,13 +41,14 @@ const PRODUCT_CATALOG = [
     "category": "lighting",
     "styles": ["modern", "industrial", "scandinavian"],
     "roomTypes": ["study", "bedroom", "living"],
-    "price_inr": 4200,
+    "price_inr": 14200,
     "imageUrl": "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=600&q=80",
     "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
     "dimensions": { "lengthCm": 20, "widthCm": 20, "heightCm": 50 },
     "platform": "Amazon",
     "buyUrl": "https://amazon.in/dp/B08LAMP123",
-    "tags": ["lamp", "lighting", "table"]
+    "tags": ["lamp", "lighting", "table"],
+    "description": "Exquisitely engineered with an iridescent dichroic glass shade that fractures light into a breathtaking spectrum. This premium luminaire is a true statement of modern architectural luxury."
   },
   {
     "id": "decor-02",
@@ -59,7 +62,8 @@ const PRODUCT_CATALOG = [
     "dimensions": { "lengthCm": 25, "widthCm": 25, "heightCm": 45 },
     "platform": "Flipkart",
     "buyUrl": "https://flipkart.com/item/lantern999",
-    "tags": ["lantern", "decor", "vintage"]
+    "tags": ["lantern", "decor", "vintage"],
+    "description": "Add a touch of warm, bohemian charm to your evenings with this charming and practical brass-finish lantern."
   },
   {
     "id": "decor-03",
@@ -67,13 +71,14 @@ const PRODUCT_CATALOG = [
     "category": "decoration",
     "styles": ["industrial", "traditional"],
     "roomTypes": ["study", "living"],
-    "price_inr": 5500,
+    "price_inr": 35500,
     "imageUrl": "https://images.unsplash.com/photo-1516961642265-531546e84af2?auto=format&fit=crop&w=600&q=80",
     "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/AntiqueCamera/glTF-Binary/AntiqueCamera.glb",
     "dimensions": { "lengthCm": 15, "widthCm": 15, "heightCm": 20 },
     "platform": "Amazon",
     "buyUrl": "https://amazon.in/dp/B08CAMERA",
-    "tags": ["camera", "antique", "decor"]
+    "tags": ["camera", "antique", "decor"],
+    "description": "A meticulously restored 1950s cinematic relic. Exhibiting pristine mechanical craftsmanship, this rare artifact is tailored for collectors who demand exclusivity and historical provenance."
   },
   {
     "id": "decor-04",
@@ -87,7 +92,8 @@ const PRODUCT_CATALOG = [
     "dimensions": { "lengthCm": 40, "widthCm": 15, "heightCm": 25 },
     "platform": "Amazon",
     "buyUrl": "https://amazon.in/dp/B08BOOMBOX",
-    "tags": ["audio", "retro", "boombox"]
+    "tags": ["audio", "retro", "boombox"],
+    "description": "A vibrant blast from the past. This retro boombox brings fun energy and decent acoustics to your personal space."
   },
   {
     "id": "decor-05",
@@ -101,7 +107,8 @@ const PRODUCT_CATALOG = [
     "dimensions": { "lengthCm": 15, "widthCm": 10, "heightCm": 15 },
     "platform": "Flipkart",
     "buyUrl": "https://flipkart.com/item/wooden-duck",
-    "tags": ["toy", "wooden", "decor"]
+    "tags": ["toy", "wooden", "decor"],
+    "description": "A simple, hand-carved wooden ornament perfect for adding a subtle touch of nature to a child's room."
   },
   {
     "id": "decor-06",
@@ -115,7 +122,158 @@ const PRODUCT_CATALOG = [
     "dimensions": { "lengthCm": 10, "widthCm": 10, "heightCm": 25 },
     "platform": "Amazon",
     "buyUrl": "https://amazon.in/dp/B08FLASK",
-    "tags": ["bottle", "desk", "minimalist"]
+    "tags": ["bottle", "desk", "minimalist"],
+    "description": "Keep your beverages at the perfect temperature with this sleek, vacuum-insulated everyday companion."
+  },
+  {
+    "id": "decor-07",
+    "name": "Classic Wooden Toy Train",
+    "category": "decoration",
+    "styles": ["traditional", "bohemian"],
+    "roomTypes": ["kids", "living"],
+    "price_inr": 2500,
+    "imageUrl": "https://images.unsplash.com/photo-1585806655106-12c80cf54199?auto=format&fit=crop&w=600&q=80",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/ToyTrain/glTF-Binary/ToyTrain.glb",
+    "dimensions": { "lengthCm": 30, "widthCm": 10, "heightCm": 12 },
+    "platform": "Amazon",
+    "buyUrl": "https://amazon.in/dp/B08TRAIN",
+    "tags": ["toy", "wood", "train"],
+    "description": "A delightful, nostalgic wooden train set. Crafted to endure playtime while looking charming on a nursery shelf."
+  },
+  {
+    "id": "decor-08",
+    "name": "Geometric Fox Sculpture",
+    "category": "decoration",
+    "styles": ["modern", "minimalist"],
+    "roomTypes": ["living", "study"],
+    "price_inr": 48000,
+    "imageUrl": "https://images.unsplash.com/photo-1606707765187-573e034e3aeb?auto=format&fit=crop&w=600&q=80",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb",
+    "dimensions": { "lengthCm": 40, "widthCm": 15, "heightCm": 30 },
+    "platform": "CaviarDecor",
+    "buyUrl": "https://amazon.in/dp/B08FOXART",
+    "tags": ["sculpture", "art", "modern"],
+    "description": "An opulent geometric study cast in precious metallic alloys. This elite sculptural centerpiece commands attention, reflecting the pinnacle of contemporary avant-garde artistry."
+  },
+  {
+    "id": "decor-09",
+    "name": "Ceramic Avocado Kitchen Decor",
+    "category": "decoration",
+    "styles": ["bohemian", "modern"],
+    "roomTypes": ["dining", "balcony"],
+    "price_inr": 900,
+    "imageUrl": "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&w=600&q=80",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Avocado/glTF-Binary/Avocado.glb",
+    "dimensions": { "lengthCm": 10, "widthCm": 8, "heightCm": 10 },
+    "platform": "Flipkart",
+    "buyUrl": "https://flipkart.com/item/avocado",
+    "tags": ["ceramic", "kitchen", "quirky"],
+    "description": "A fun, playful ceramic avocado that adds a quirky pop of color to any modern dining setting."
+  },
+  {
+    "id": "decor-10",
+    "name": "Sci-Fi Damaged Helmet Replica",
+    "category": "decoration",
+    "styles": ["industrial", "modern"],
+    "roomTypes": ["studio", "study"],
+    "price_inr": 125000,
+    "imageUrl": "https://images.unsplash.com/photo-1533613220915-609f661a6fe1?auto=format&fit=crop&w=600&q=80",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb",
+    "dimensions": { "lengthCm": 30, "widthCm": 30, "heightCm": 35 },
+    "platform": "CaviarDecor",
+    "buyUrl": "https://amazon.in/dp/B08HELMET",
+    "tags": ["sci-fi", "replica", "collectible"],
+    "description": "Forged for the ultimate collector. This hyper-realistic, battle-scarred helmet replica incorporates carbon-fiber detailing and distressed metallurgy, representing the absolute zenith of luxury cinematic memorabilia."
+  },
+  {
+    "id": "decor-11",
+    "name": "Vintage Corset Mannequin",
+    "category": "furniture",
+    "styles": ["traditional", "bohemian"],
+    "roomTypes": ["bedroom", "studio"],
+    "price_inr": 24000,
+    "imageUrl": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Corset/glTF-Binary/Corset.glb",
+    "dimensions": { "lengthCm": 40, "widthCm": 40, "heightCm": 160 },
+    "platform": "Amazon",
+    "buyUrl": "https://amazon.in/dp/B08CORSET",
+    "tags": ["fashion", "vintage", "bedroom"],
+    "description": "An elegant sartorial statement piece featuring rich silk brocade and hand-stitched detailing, evoking the lavish extravagance of Victorian haute couture."
+  },
+  {
+    "id": "decor-12",
+    "name": "Glazed Ceramic Barramundi Fish",
+    "category": "decoration",
+    "styles": ["scandinavian", "traditional"],
+    "roomTypes": ["dining", "living", "balcony"],
+    "price_inr": 2200,
+    "imageUrl": "https://images.unsplash.com/photo-1534043464124-3be32fe000cb?auto=format&fit=crop&w=600&q=80",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BarramundiFish/glTF-Binary/BarramundiFish.glb",
+    "dimensions": { "lengthCm": 25, "widthCm": 8, "heightCm": 12 },
+    "platform": "Flipkart",
+    "buyUrl": "https://flipkart.com/item/fish",
+    "tags": ["ceramic", "marine", "decor"],
+    "description": "A charming, coastal-inspired glazed ceramic fish ornament that beautifully catches the natural light."
+  },
+  {
+    "id": "decor-13",
+    "name": "Anatomical Brain Stem Model",
+    "category": "decoration",
+    "styles": ["industrial", "modern"],
+    "roomTypes": ["study", "studio"],
+    "price_inr": 6500,
+    "imageUrl": "https://images.unsplash.com/photo-1559757175-903ec41fbd68?auto=format&fit=crop&w=600&q=80",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/BrainStem/glTF-Binary/BrainStem.glb",
+    "dimensions": { "lengthCm": 10, "widthCm": 10, "heightCm": 20 },
+    "platform": "Amazon",
+    "buyUrl": "https://amazon.in/dp/B08BRAIN",
+    "tags": ["science", "medical", "study"],
+    "description": "A detailed, clinical-grade anatomical model. Ideal for the discerning intellectual seeking an unconventional, thought-provoking desk accessory."
+  },
+  {
+    "id": "decor-14",
+    "name": "Designer Sneaker Display",
+    "category": "accessories",
+    "styles": ["modern", "industrial"],
+    "roomTypes": ["bedroom", "studio"],
+    "price_inr": 85000,
+    "imageUrl": "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb",
+    "dimensions": { "lengthCm": 35, "widthCm": 15, "heightCm": 20 },
+    "platform": "CaviarDecor",
+    "buyUrl": "https://amazon.in/dp/B08SHOE",
+    "tags": ["sneaker", "hype", "display"],
+    "description": "A spectacular exhibition of modern streetwear luxury. Encased in museum-grade acrylic, this ultra-rare designer silhouette represents the absolute pinnacle of contemporary urban wealth."
+  },
+  {
+    "id": "decor-15",
+    "name": "Antique Water Canteen",
+    "category": "decoration",
+    "styles": ["bohemian", "traditional"],
+    "roomTypes": ["balcony", "living"],
+    "price_inr": 4100,
+    "imageUrl": "https://images.unsplash.com/photo-1558980394-4c7c9299fe96?auto=format&fit=crop&w=600&q=80",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/WaterBottle/glTF-Binary/WaterBottle.glb",
+    "dimensions": { "lengthCm": 15, "widthCm": 15, "heightCm": 25 },
+    "platform": "Amazon",
+    "buyUrl": "https://amazon.in/dp/B08CANTEEN",
+    "tags": ["vintage", "canteen", "rustic"],
+    "description": "A rugged, historically inspired rustic canteen that brings an authentic touch of adventure to your outdoor or living spaces."
+  },
+  {
+    "id": "decor-16",
+    "name": "Bespoke Golden Table Lamp",
+    "category": "lighting",
+    "styles": ["modern", "minimalist"],
+    "roomTypes": ["bedroom", "study", "living"],
+    "price_inr": 210000,
+    "imageUrl": "https://images.unsplash.com/photo-1507676184212-d0330a151f15?auto=format&fit=crop&w=600&q=80",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": { "lengthCm": 25, "widthCm": 25, "heightCm": 60 },
+    "platform": "CaviarDecor",
+    "buyUrl": "https://amazon.in/dp/B08GOLDLAMP",
+    "tags": ["luxury", "gold", "lamp"],
+    "description": "An artifact of profound prestige. Hand-gilded in 24-karat gold with precision micro-engineering, this elite luminaire is not merely a light source, but a testament to unimaginable wealth and uncompromising taste."
   }
 ];
 
