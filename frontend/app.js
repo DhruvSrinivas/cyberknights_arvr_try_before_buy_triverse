@@ -118,86 +118,123 @@ viewArBtn.addEventListener('click', () => {
 
 /**
  * handleUrlSubmit(url)
- *
- * PURPOSE:
- *   Called when the user submits a product URL.
- *   Validates the URL, shows the spinner, calls the backend extractProduct
- *   endpoint, then calls displayProduct() with the result.
- *   Also triggers the getPrices call → displayPrices().
- *
- * WHAT TO IMPLEMENT:
- *   1. Validate url is not empty — show error if blank
- *   2. Validate url starts with http:// or https:// — show error if invalid
- *   3. Hide any existing error message
- *   4. Hide product card + price panel (reset from previous search)
- *   5. Show loading spinner (.spinner, remove .hidden)
- *   6. POST to `${API_BASE_URL}/extractProduct` with body: { url }
- *      - Set Content-Type: application/json header
- *   7. Parse the JSON response
- *   8. If response has { error: "..." }, call showError(response.error) and return
- *   9. Store result in `currentProduct`
- *  10. Call displayProduct(currentProduct)
- *  11. Call getPrices(currentProduct.name) to fetch and display prices
- *  12. Hide spinner
- *  13. Wrap everything in try/catch — call showError() on any fetch error
- *
- * @param {string} url - The product URL from the input field
+ * PURPOSE: Validates URL, calls APIs, and updates UI state.
  */
 async function handleUrlSubmit(url) {
-  // Umar: implement this function
+  // 1. Validation
+  if (!url) {
+    showError("Please paste a product URL to analyze.");
+    return;
+  }
+  try {
+    new URL(url); // basic validity check
+  } catch (e) {
+    showError("Invalid URL format. Please include http:// or https://");
+    return;
+  }
+
+  // 2. UI State Reset
+  hideError();
+  productCard.classList.add('hidden');
+  pricePanel.classList.add('hidden');
+  arContainer.classList.add('hidden');
+  
+  // 3. Show Spinner
+  loadingSpinner.classList.remove('hidden');
+
+  try {
+    // 4. Call /extractProduct
+    const extractRes = await fetch(`${API_BASE_URL}/extractProduct`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    
+    if (!extractRes.ok) throw new Error("Failed to fetch product data.");
+    const productData = await extractRes.json();
+
+    if (productData.error) {
+      showError(productData.error);
+      loadingSpinner.classList.add('hidden');
+      return;
+    }
+
+    // 5. Success! Save and Display
+    currentProduct = productData;
+    displayProduct(currentProduct);
+
+    // 6. Fetch Prices asynchronously
+    const pricesRes = await fetch(`${API_BASE_URL}/getPrices?productName=${encodeURIComponent(currentProduct.name)}`);
+    if (pricesRes.ok) {
+      const pricesData = await pricesRes.json();
+      if (Array.isArray(pricesData) && pricesData.length > 0) {
+        displayPrices(pricesData);
+      }
+    }
+  } catch (error) {
+    console.error("Error during extraction:", error);
+    showError("An unexpected error occurred while analyzing the product.");
+  } finally {
+    // 7. Hide Spinner
+    loadingSpinner.classList.add('hidden');
+  }
 }
 
 /**
  * displayProduct(product)
- *
- * PURPOSE:
- *   Renders the product card with data from the backend.
- *   Shows #product-card by removing .hidden.
- *
- * WHAT TO IMPLEMENT:
- *   1. Set productName.textContent = product.name
- *   2. Set productImage.src = product.imageUrl
- *   3. Set productImage.alt = product.name
- *   4. Set productPrice.textContent = formatPrice(product.originalPrice) — e.g. "₹24,999"
- *   5. Set productCategory.textContent = product.category  (or capitalize it)
- *   6. Set productPlatform.textContent = `Found on ${product.platform}`
- *   7. Set productDims.textContent = product.dimensions.raw
- *   8. Remove .hidden from productCard
- *
- * HELPER — you may want a formatPrice() helper:
- *   function formatPrice(amount) {
- *     return '₹' + amount.toLocaleString('en-IN');
- *   }
- *
- * @param {Object} product - Product JSON from the backend (see frontend/README.md for shape)
  */
 async function displayProduct(product) {
-  // Umar: implement this function
+  productName.textContent = product.name || "Unknown Product";
+  productImage.src = product.imageUrl || "";
+  productImage.alt = product.name || "Product Image";
+  productPrice.textContent = formatPrice(product.originalPrice);
+  productCategory.textContent = product.category ? product.category.toUpperCase() : "DÉCOR";
+  productPlatform.textContent = `Found on ${product.platform}`;
+  
+  if (product.dimensions && product.dimensions.raw) {
+    productDims.textContent = product.dimensions.raw;
+  } else {
+    productDims.textContent = "Dimensions unknown";
+  }
+
+  // Show with fade-in animation
+  productCard.classList.remove('hidden');
+  productCard.classList.add('fade-in');
 }
 
 /**
  * displayPrices(prices)
- *
- * PURPOSE:
- *   Renders the price comparison panel from the prices array.
- *   Each item in the array is: { platform, price_inr, url, in_stock }
- *
- * WHAT TO IMPLEMENT:
- *   1. Clear priceList.innerHTML = ''
- *   2. Find the lowest price in the array (for highlighting)
- *   3. For each price object, create an <li> element with:
- *      - Platform name
- *      - Price formatted as ₹XX,XXX
- *      - "In Stock" (green) or "Out of Stock" (red) badge
- *      - "Buy Now" link (opens in new tab) to price.url
- *      - Add class .price-panel__item--best if it's the lowest price
- *   4. Append each <li> to priceList
- *   5. Remove .hidden from pricePanel
- *
- * @param {Array} prices - Array of price objects from the backend
  */
 async function displayPrices(prices) {
-  // Umar: implement this function
+  priceList.innerHTML = '';
+  
+  // Find the lowest price
+  let minPrice = Infinity;
+  prices.forEach(p => {
+    if (p.price_inr < minPrice) minPrice = p.price_inr;
+  });
+
+  prices.forEach(priceObj => {
+    const isBest = priceObj.price_inr === minPrice;
+    const stockClass = priceObj.in_stock ? 'stock-in' : 'stock-out';
+    const stockText = priceObj.in_stock ? 'In Stock' : 'Out of Stock';
+    const highlightClass = isBest ? 'price-panel__item--best' : '';
+
+    const li = document.createElement('li');
+    li.className = `price-panel__item ${highlightClass}`;
+    
+    li.innerHTML = `
+      <span class="price-platform">${priceObj.platform}</span>
+      <span class="price-stock ${stockClass}">${stockText}</span>
+      <span class="price-amount">${formatPrice(priceObj.price_inr)}</span>
+      <a href="${priceObj.url}" target="_blank" rel="noopener noreferrer" class="price-buy-btn">Buy Now</a>
+    `;
+    priceList.appendChild(li);
+  });
+
+  // Show with fade-in animation
+  pricePanel.classList.remove('hidden');
+  pricePanel.classList.add('fade-in');
 }
 
 
@@ -205,56 +242,43 @@ async function displayPrices(prices) {
 // HELPER FUNCTIONS
 // ---------------------------------------------------------------------------
 
-/**
- * showError(message)
- *
- * PURPOSE:
- *   Displays an error message below the URL input bar.
- *   Shows #error-message by removing .hidden and sets the error text.
- *   Hides the spinner and product card if visible.
- *
- * Umar: implement this — it will be called from handleUrlSubmit's catch block
- * and from any place that detects a data error.
- *
- * @param {string} message - Human-readable error message
- */
 function showError(message) {
-  // Umar: implement this helper
+  errorText.textContent = message;
+  errorMessage.classList.remove('hidden');
+  errorMessage.classList.add('fade-in');
 }
 
-/**
- * hideError()
- * Clears and hides the error message. Called at the start of a new submission.
- */
 function hideError() {
-  // Umar: implement this helper
+  errorMessage.classList.add('hidden');
+  errorMessage.classList.remove('fade-in');
+  errorText.textContent = '';
 }
 
-/**
- * formatPrice(amount)
- * Formats a number as an Indian Rupee string.
- * Example: formatPrice(24999) → "₹24,999"
- *
- * @param {number} amount
- * @returns {string}
- */
 function formatPrice(amount) {
-  // Umar: implement — use toLocaleString('en-IN')
+  if (!amount || isNaN(amount)) return '₹ --';
+  return '₹' + Number(amount).toLocaleString('en-IN');
 }
-
 
 // ---------------------------------------------------------------------------
 // INITIALIZATION
 // ---------------------------------------------------------------------------
 
-/**
- * Called once when the page loads.
- * Currently just logs that the app is ready.
- * Umar: add any startup logic here (e.g. check for saved URL in localStorage).
- */
 function init() {
   console.log('[TRIVERSE] App initialized. API base:', API_BASE_URL);
-  // Umar: add startup logic here if needed
+  
+  // Add fade-in to the initial navbar & hero
+  document.querySelector('.navbar').classList.add('fade-in');
+  document.querySelector('.hero').classList.add('fade-in');
+  
+  // Make view AR button show container
+  viewArBtn.addEventListener('click', () => {
+    if (!currentProduct) return;
+    arContainer.classList.remove('hidden');
+    // The main event listener is already bound at the top of this file,
+    // it will call initARViewer there. We just ensure the container is visible.
+    // Wait, the main listener is in this file above, it doesn't remove hidden. Let me just remove hidden here.
+  });
 }
 
 init();
+

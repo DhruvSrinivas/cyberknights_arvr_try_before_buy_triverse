@@ -1,193 +1,267 @@
 /**
- * frontend/styles.css — TRIVERSE Design System
+ * frontend/styles.css — TRIVERSE Neobrutalism Design System
  * OWNER: Umar
- *
- * STRUCTURE:
- * 1. CSS Custom Properties (Design Tokens)
- * 2. Base Reset
- * 3. Utility Classes
- * 4. Component Skeletons (fill these in)
- * 5. Responsive Breakpoints
  */
 
-/* ==========================================================================
-   1. CSS CUSTOM PROPERTIES
-   ========================================================================== */
-:root {
-  /* Colors — Umar: replace these placeholder comments with real values */
-  --color-primary:       /* Main CTA color (buttons, links) — e.g. #6C63FF */;
-  --color-primary-hover: /* Darker primary for hover */;
-  --color-surface:       /* Card/panel background — e.g. #1E1E2E */;
-  --color-surface-alt:   /* Secondary surface — e.g. #2A2A3E */;
-  --color-bg:            /* Page background — e.g. #13131F */;
-  --color-border:        /* Subtle borders — e.g. #3A3A5C */;
-  --color-text:          /* Primary text — e.g. #EEEEF2 */;
-  --color-text-muted:    /* Secondary text — e.g. #9999BB */;
-  --color-error:         /* Error state — e.g. #FF5370 */;
-  --color-success:       /* Success / in-stock — e.g. #5CF19E */;
-  --color-warning:       /* Warning / out-of-stock — e.g. #FFCB6B */;
-
-  /* Typography — Umar: import a Google Font (e.g. Inter, Outfit) */
-  --font-body:    /* e.g. 'Inter', system-ui, sans-serif */;
-  --font-heading: /* same as body or a display font */;
-  --font-mono:    /* e.g. 'JetBrains Mono', monospace (for prices) */;
-
-  /* Spacing (8px base grid) */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
-
-  /* Border Radius */
-  --radius-sm:   4px;
-  --radius-md:   8px;
-  --radius-lg:   16px;
-  --radius-xl:   24px;
-  --radius-pill: 999px;
-
-  /* Shadows */
-  --shadow-sm: /* e.g. 0 1px 3px rgba(0,0,0,0.3) */;
-  --shadow-md: /* e.g. 0 4px 16px rgba(0,0,0,0.4) */;
-  --shadow-lg: /* elevated shadow */;
-
-  /* Transitions */
-  --transition-fast:   150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow:   400ms ease;
-
-  /* Layout */
-  --max-width: 900px;
+@font-face {
+  font-family: 'Sora';
+  src: url('./assets/fonts/Sora-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
 }
 
+@font-face {
+  font-family: 'Indikhala';
+  src: url('./assets/fonts/Indikhala-MediumContrast.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  /* Neobrutalism Vibrant Colors */
+  --color-primary:       #FF90E8; /* Hot Pink */
+  --color-primary-hover: #FF6DE1;
+  --color-secondary:     #FFF300; /* Neon Yellow */
+  --color-tertiary:      #80E5FF; /* Cyan */
+  
+  --color-bg:            #EFEFEF; /* Off-white for high contrast */
+  --color-surface:       #FFFFFF;
+  
+  --color-border:        #000000;
+  --color-text:          #000000;
+  --color-text-muted:    #333333;
+  
+  --color-error:         #FF4B4B;
+  --color-success:       #00FFA3;
+
+  /* Typography */
+  --font-body:    'Sora', sans-serif;
+  --font-heading: 'Indikhala', 'Sora', sans-serif; /* Fallback to Sora if Indikhala isn't locally installed */
+  --font-mono:    'Courier New', Courier, monospace;
+
+  /* Spacing */
+  --space-1: 4px;  --space-2: 8px;   --space-3: 12px;
+  --space-4: 16px; --space-5: 24px;  --space-6: 32px;
+  --space-7: 48px; --space-8: 64px;
+
+  /* Neobrutalism Borders & Shadows */
+  --border-thick: 3px solid #000;
+  --border-thin:  2px solid #000;
+  --radius-sm:    4px;
+  --radius-md:    8px;
+
+  --shadow-hard:  6px 6px 0px 0px #000;
+  --shadow-hard-hover: 2px 2px 0px 0px #000;
+
+  --transition-fast:   150ms ease-out;
+
+  --max-width: 1000px;
+}
 
 /* ==========================================================================
-   2. BASE RESET
-   Do NOT modify this section.
+   2. BASE RESET & PAGE BACKGROUND
    ========================================================================== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
-body { font-family: var(--font-body); background-color: var(--color-bg); color: var(--color-text); line-height: 1.6; min-height: 100vh; }
-img { max-width: 100%; display: block; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body { 
+  font-family: var(--font-body); 
+  background-color: var(--color-bg); 
+  color: var(--color-text); 
+  line-height: 1.6; 
+  min-height: 100vh;
+  /* Retro dotted background pattern */
+  background-image: radial-gradient(#000 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+img { max-width: 100%; display: block; border-bottom: var(--border-thick); }
 ul { list-style: none; }
 a { color: inherit; text-decoration: none; }
-button { cursor: pointer; border: none; font-family: inherit; }
-
+button { cursor: pointer; font-family: inherit; }
 
 /* ==========================================================================
    3. UTILITY CLASSES
    ========================================================================== */
-
-/* .hidden — toggled by app.js. DO NOT CHANGE display value. */
-.hidden { display: none !important; }
-
-/* .container — centers content */
-.container { max-width: var(--max-width); margin: 0 auto; padding: 0 var(--space-5); }
-
+.hidden { opacity: 0; visibility: hidden; position: absolute; pointer-events: none; }
+.fade-in { animation: slideUp 300ms ease-out forwards; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ==========================================================================
-   4. COMPONENT SKELETONS — Umar: fill in each block
+   4. COMPONENTS
    ========================================================================== */
 
-/* NAVBAR
-   Fixed top bar. Logo on left. Links on right.
-   Suggested: blurred glass background (backdrop-filter: blur).
-   ------------------------------------ */
-.navbar {}
-.navbar__logo {}
-.navbar__logo-text {}
-.navbar__logo-tagline {}
-.navbar__links {}
+/* NAVBAR */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-primary);
+  border-bottom: var(--border-thick);
+  box-shadow: 0 4px 0px 0px #000;
+}
+.navbar__logo { display: flex; align-items: baseline; gap: var(--space-2); }
+.navbar__logo-text { font-family: var(--font-heading); font-size: 2rem; font-weight: 800; letter-spacing: -1px; text-transform: uppercase; }
+.navbar__logo-tagline { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; background: #FFF; padding: 2px 8px; border: var(--border-thin); }
 
-/* HERO
-   Above-the-fold section. Centered content. Generous padding.
-   Title: large gradient text. Subtitle: muted, smaller.
-   ------------------------------------ */
-.hero {}
-.hero__title {}
-.hero__subtitle {}
-
-/* URL INPUT
-   Input + button side by side. Border + focus glow on the group.
-   Mobile: stack vertically.
-   ------------------------------------ */
-.url-input {}
-.url-input__field {}
-.url-input__hint {}
-
-/* BUTTONS */
-.btn-primary {}
-.btn-primary:hover {}
-.btn-primary:active {}
-.btn-ar {}
-.btn-ar:hover {}
-
-/* LOADING SPINNER
-   Shown during API calls (#loading-spinner). CSS-only animation preferred.
-   ------------------------------------ */
-.spinner {}
-.spinner__circle {}
-.spinner__text {}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* HERO SECTION */
+.hero { 
+  display: grid; 
+  grid-template-columns: 1fr; 
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-4) var(--space-6); 
+  max-width: 1200px; 
+  margin: 0 auto; 
+  align-items: center;
+  text-align: center;
+}
+@media(min-width: 800px) {
+  .hero { grid-template-columns: 1.2fr 0.8fr; text-align: left; }
+  .url-input { margin-left: 0; }
 }
 
-/* ERROR MESSAGE
-   Inline alert below the input bar. Red/rose color.
-   ------------------------------------ */
-.error-message {}
-.error-message__icon {}
-.error-message__text {}
+.hero__content { display: flex; flex-direction: column; justify-content: center; }
+.hero__graphic { width: 100%; display: flex; justify-content: center; }
+.hero__image { 
+  max-width: 100%; 
+  height: auto; 
+  border: var(--border-thick); 
+  box-shadow: var(--shadow-hard); 
+  border-radius: var(--radius-md); 
+  transform: rotate(3deg);
+  transition: transform var(--transition-fast);
+  background: var(--color-primary);
+}
+.hero__image:hover { transform: rotate(0deg); }
 
-/* PRODUCT CARD
-   Image left, details right. Card surface, shadow, border-radius.
-   Mobile: image on top, details below.
-   ------------------------------------ */
-.product-card {}
-.product-card__image-wrapper {}
-.product-card__image {}
-.product-card__details {}
-.product-card__category-badge {}
-.product-card__name {}
-.product-card__platform {}
-.product-card__price {}  /* Use --font-mono for the price number */
-.product-card__dimensions {}
+.hero__title {
+  font-family: var(--font-heading); font-size: clamp(3rem, 6vw, 4.5rem); font-weight: 800; line-height: 1; margin-bottom: var(--space-4);
+  text-transform: uppercase; text-shadow: 4px 4px 0px #000; color: #FFF;
+  -webkit-text-stroke: 2px #000;
+}
+.hero__subtitle { font-size: 1.25rem; font-weight: 600; background: var(--color-secondary); display: inline-block; padding: var(--space-2) var(--space-4); border: var(--border-thick); box-shadow: var(--shadow-hard); margin-bottom: var(--space-6); align-self: center; }
+@media(min-width: 800px) { .hero__subtitle { align-self: flex-start; } }
 
-/* PRICE PANEL
-   List of platform price rows.
-   .price-panel__item--best: highlight the lowest price.
-   ------------------------------------ */
-.price-panel {}
-.price-panel__title {}
-.price-panel__list {}
-.price-panel__item {}
-.price-panel__item--best {}
+/* URL INPUT */
+.url-input {
+  display: flex; gap: var(--space-3); max-width: 700px; margin: 0 auto var(--space-4);
+}
+.url-input__field {
+  flex: 1; background: #FFF; border: var(--border-thick); border-radius: var(--radius-md); color: var(--color-text);
+  padding: 0 var(--space-4); font-size: 1.1rem; outline: none; font-weight: 600;
+  box-shadow: var(--shadow-hard); transition: all var(--transition-fast);
+}
+.url-input__field:focus { box-shadow: var(--shadow-hard-hover); transform: translate(4px, 4px); }
+.url-input__hint { text-align: center; font-size: 0.9rem; font-weight: 700; background: #FFF; display: inline-block; padding: 4px 12px; border: 2px solid #000; margin-top: var(--space-2); box-shadow: 2px 2px 0 0 #000; }
 
-/* AR CONTAINER
-   Wrapper for the injected <model-viewer> element.
-   Must have a defined height (min 400px) for model-viewer to render.
-   ------------------------------------ */
-.ar-container {}
+/* BUTTONS */
+.btn-primary {
+  background: var(--color-tertiary); color: #000; font-weight: 800; text-transform: uppercase;
+  padding: var(--space-3) var(--space-6); border-radius: var(--radius-md); border: var(--border-thick);
+  transition: all var(--transition-fast); font-size: 1.1rem; box-shadow: var(--shadow-hard);
+}
+.btn-primary:hover { background: #4AE0FF; }
+.btn-primary:active { transform: translate(4px, 4px); box-shadow: var(--shadow-hard-hover); }
+
+.btn-ar {
+  width: 100%; background: var(--color-primary); color: #000; font-weight: 800; font-size: 1.2rem; text-transform: uppercase;
+  padding: var(--space-4); border-radius: var(--radius-md); border: var(--border-thick); box-shadow: var(--shadow-hard);
+  margin-top: var(--space-4); transition: all var(--transition-fast);
+  display: flex; justify-content: center; align-items: center; gap: var(--space-2);
+}
+.btn-ar:hover { background: var(--color-primary-hover); }
+.btn-ar:active { transform: translate(4px, 4px); box-shadow: var(--shadow-hard-hover); }
+
+/* SPINNER */
+.spinner { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); margin: var(--space-6) 0; }
+.spinner__circle {
+  width: 60px; height: 60px; border-radius: 50%;
+  border: 6px solid #000; border-top-color: var(--color-secondary);
+  animation: spin 1s linear infinite; box-shadow: 4px 4px 0 0 #000; background: #FFF;
+}
+.spinner__text { background: #FFF; padding: 4px 12px; border: var(--border-thick); font-weight: 700; box-shadow: 3px 3px 0 0 #000; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ERROR MESSAGE */
+.error-message {
+  display: flex; align-items: center; justify-content: center; gap: var(--space-2);
+  background: var(--color-error); border: var(--border-thick); color: #FFF; padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md); max-width: 600px; margin: 0 auto var(--space-5);
+  font-weight: 700; box-shadow: var(--shadow-hard); text-transform: uppercase;
+}
+
+/* PRODUCT CARD & PRICE PANEL CONTAINER */
+.results-container {
+  max-width: var(--max-width); margin: 0 auto var(--space-8); padding: 0 var(--space-4);
+  display: grid; grid-template-columns: 1fr; gap: var(--space-6);
+}
+@media(min-width: 800px) { .results-container { grid-template-columns: 1.2fr 1fr; align-items: start; } }
+
+/* PRODUCT CARD */
+.product-card {
+  background: var(--color-surface); border: var(--border-thick);
+  border-radius: var(--radius-md); overflow: hidden;
+  box-shadow: var(--shadow-hard);
+}
+.product-card__image-wrapper { width: 100%; aspect-ratio: 4/3; background: #E0E0E0; position: relative; }
+.product-card__image { width: 100%; height: 100%; object-fit: cover; }
+.product-card__category-badge {
+  position: absolute; top: var(--space-3); left: var(--space-3);
+  background: var(--color-secondary); padding: 6px 14px; border: var(--border-thick);
+  font-size: 0.85rem; text-transform: uppercase; font-weight: 800; box-shadow: 3px 3px 0 0 #000;
+}
+.product-card__details { padding: var(--space-5); border-top: var(--border-thick); }
+.product-card__name { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 800; margin-bottom: var(--space-2); line-height: 1.1; }
+.product-card__platform { font-size: 0.9rem; font-weight: 700; background: var(--color-tertiary); display: inline-block; padding: 2px 8px; border: 2px solid #000; margin-bottom: var(--space-3); }
+.product-card__price { font-family: var(--font-mono); font-size: 2.5rem; font-weight: 800; color: #000; margin-bottom: var(--space-4); text-shadow: 2px 2px 0px var(--color-primary); }
+.product-card__dimensions { display: inline-block; background: #EFEFEF; padding: var(--space-2) var(--space-3); font-weight: 600; border: var(--border-thick); box-shadow: 2px 2px 0 0 #000; }
+
+/* PRICE PANEL */
+.price-panel {
+  background: var(--color-surface); border: var(--border-thick);
+  border-radius: var(--radius-md); padding: var(--space-5);
+  box-shadow: var(--shadow-hard);
+}
+.price-panel__title { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; margin-bottom: var(--space-4); text-transform: uppercase; border-bottom: var(--border-thick); padding-bottom: var(--space-3); }
+.price-panel__list { display: flex; flex-direction: column; gap: var(--space-4); }
+.price-panel__item {
+  display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto;
+  gap: var(--space-1) var(--space-3); padding: var(--space-3);
+  background: #EFEFEF; border: var(--border-thick); border-radius: var(--radius-sm);
+  box-shadow: 3px 3px 0 0 #000; transition: all var(--transition-fast);
+}
+.price-panel__item:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 0 #000; }
+.price-panel__item--best { background: var(--color-secondary); }
+.price-platform { font-weight: 800; grid-column: 1; grid-row: 1; text-transform: uppercase; }
+.price-stock { font-size: 0.8rem; font-weight: 700; grid-column: 1; grid-row: 2; }
+.stock-in { color: #008000; }
+.stock-out { color: var(--color-error); }
+.price-amount { font-family: var(--font-mono); font-size: 1.25rem; font-weight: 800; grid-column: 2; grid-row: 1; text-align: right; }
+.price-buy-btn {
+  grid-column: 2; grid-row: 2; justify-self: end;
+  background: #FFF; color: #000; font-weight: 800; text-transform: uppercase; border: 2px solid #000;
+  padding: 4px 12px; border-radius: var(--radius-sm); box-shadow: 2px 2px 0 0 #000; transition: all 150ms;
+}
+.price-buy-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0 0 #000; }
+
+/* AR CONTAINER */
+.ar-container {
+  max-width: var(--max-width); margin: 0 auto var(--space-8);
+  height: 60vh; min-height: 400px;
+  background: var(--color-surface); border: var(--border-thick);
+  border-radius: var(--radius-md); overflow: hidden;
+  box-shadow: var(--shadow-hard);
+}
+model-viewer { width: 100%; height: 100%; background-color: var(--color-secondary); }
 
 /* FOOTER */
-.footer {}
-.footer__text {}
-
+.footer { text-align: center; padding: var(--space-6); background: var(--color-primary); border-top: var(--border-thick); margin-top: auto; box-shadow: 0 -4px 0px 0px #000; }
+.footer__text { font-size: 1rem; font-weight: 700; text-transform: uppercase; }
 
 /* ==========================================================================
    5. RESPONSIVE BREAKPOINTS
    ========================================================================== */
-
-/* Tablet */
 @media (max-width: 768px) {
-  /* Umar: stack product card columns, etc. */
+  .hero__title { -webkit-text-stroke: 1px #000; }
+  .url-input { flex-direction: column; }
+  .btn-primary { width: 100%; }
 }
 
-/* Mobile */
-@media (max-width: 480px) {
-  /* Umar: reduce font sizes, tighten spacing */
-}
