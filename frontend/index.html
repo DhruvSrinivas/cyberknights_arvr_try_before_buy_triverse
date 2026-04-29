@@ -3,178 +3,159 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- SEO -->
-  <title>TRIVERSE — See It In Your Room Before You Buy</title>
-  <meta name="description" content="Paste any Amazon or Flipkart home décor product link and see it in your room using WebAR before you buy. Compare prices across platforms instantly." />
-
-  <!-- Umar: Link your stylesheet here -->
-  <link rel="stylesheet" href="styles.css" />
-
-  <!--
-    model-viewer CDN — loaded here so AR works across the app.
-    Do NOT move this to ar-engine.js; it must be in the HTML <head>.
-    Version: pin this to a specific version in production to avoid breaking changes.
-  -->
+  <title>TRIVERSE — AR Home Décor Visualizer</title>
+  <meta name="description" content="Pick your room, set dimensions, choose your style — TRIVERSE recommends the perfect furniture and lets you see it in AR before you buy." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/frontend/styles.css" />
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 </head>
 <body>
 
-  <!-- =====================================================================
-    NAVBAR
-    Umar: Style with .navbar class.
-    Keep the logo text "TRIVERSE" — it's the brand name.
-    The nav links are placeholders for Phase 4 (About, How It Works).
-  ====================================================================== -->
-  <nav class="navbar">
+  <!-- NAV -->
+  <nav class="navbar" id="navbar">
     <div class="navbar__logo">
+      <span class="navbar__logo-icon">⬡</span>
       <span class="navbar__logo-text">TRIVERSE</span>
-      <span class="navbar__logo-tagline">Try Before You Buy</span>
     </div>
-    <ul class="navbar__links">
-      <!-- Umar: add nav links here in Phase 4 -->
-    </ul>
+    <p class="navbar__tagline">AR Home Décor · Try Before You Buy</p>
   </nav>
 
-  <!-- =====================================================================
-    HERO SECTION
-    Umar: The main headline and subtext. Style with .hero class.
-    This section sits above the URL input bar.
-  ====================================================================== -->
-  <section class="hero">
-    <div class="hero__content">
-      <h1 class="hero__title">See It In Your Room Before You Buy</h1>
-      <p class="hero__subtitle">
-        Paste any Amazon or Flipkart home décor link. We'll load it in AR and
-        compare prices across platforms — instantly.
-      </p>
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero__badge">✦ Powered by WebAR</div>
+    <h1 class="hero__title">Design Your Room.<br/><span class="hero__title--accent">See It In AR.</span></h1>
+    <p class="hero__subtitle">Pick your room type, enter dimensions, choose a style — and we'll recommend the perfect furniture you can visualize in your actual room.</p>
+    <button class="btn-primary btn-xl" id="start-btn" onclick="document.getElementById('wizard').scrollIntoView({behavior:'smooth'})">
+      Start Designing →
+    </button>
+  </section>
 
-      <!-- =================================================================
-        URL INPUT BAR
-      ================================================================== -->
-      <div class="url-input">
-        <input
-          type="url"
-          id="url-input"
-          class="url-input__field"
-          placeholder="Paste Amazon or Flipkart product link here…"
-          aria-label="Product URL"
-          autocomplete="off"
-        />
-        <button id="analyze-btn" class="btn-primary" type="button">
-          Analyze Product
+  <!-- ================================================================
+    WIZARD
+  ================================================================ -->
+  <section class="wizard" id="wizard">
+    <div class="wizard__header">
+      <div class="wizard__steps">
+        <span class="wizard__step active" id="step-dot-1">1</span>
+        <span class="wizard__step-line"></span>
+        <span class="wizard__step" id="step-dot-2">2</span>
+        <span class="wizard__step-line"></span>
+        <span class="wizard__step" id="step-dot-3">3</span>
+      </div>
+    </div>
+
+    <!-- STEP 1: Room Type -->
+    <div class="wizard__panel active" id="step-1">
+      <h2 class="wizard__title">Which room are you designing?</h2>
+      <div class="room-grid" id="room-grid">
+        <!-- Filled by app.js -->
+      </div>
+    </div>
+
+    <!-- STEP 2: Dimensions -->
+    <div class="wizard__panel" id="step-2">
+      <h2 class="wizard__title">Room Dimensions</h2>
+      <p class="wizard__subtitle" id="room-label-display"></p>
+      <div class="dims-form">
+        <div class="dims-form__field">
+          <label>Length (ft)</label>
+          <input type="number" id="dim-length" min="5" max="50" value="14" />
+          <span class="dims-form__unit" id="length-cm">426 cm</span>
+        </div>
+        <div class="dims-form__field">
+          <label>Width (ft)</label>
+          <input type="number" id="dim-width" min="5" max="50" value="12" />
+          <span class="dims-form__unit" id="width-cm">365 cm</span>
+        </div>
+        <div class="dims-form__field">
+          <label>Height (ft)</label>
+          <input type="number" id="dim-height" min="7" max="20" value="9" />
+          <span class="dims-form__unit" id="height-cm">274 cm</span>
+        </div>
+      </div>
+      <div class="room-viz" id="room-viz">
+        <div class="room-viz__box" id="room-viz-box">
+          <span class="room-viz__label" id="room-viz-label">14 × 12 ft</span>
+        </div>
+      </div>
+      <div class="wizard__nav">
+        <button class="btn-secondary" onclick="goToStep(1)">← Back</button>
+        <button class="btn-primary" onclick="goToStep(3)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Style + Budget -->
+    <div class="wizard__panel" id="step-3">
+      <h2 class="wizard__title">Style &amp; Budget</h2>
+      <div class="style-section">
+        <p class="wizard__subtitle">Pick your aesthetic</p>
+        <div class="style-grid" id="style-grid"><!-- filled by app.js --></div>
+      </div>
+      <div class="budget-section">
+        <p class="wizard__subtitle">Budget range</p>
+        <div class="budget-grid" id="budget-grid"><!-- filled by app.js --></div>
+      </div>
+      <div class="wizard__nav">
+        <button class="btn-secondary" onclick="goToStep(2)">← Back</button>
+        <button class="btn-primary btn-recommend" id="recommend-btn">
+          <span id="recommend-btn-text">✦ Get Recommendations</span>
+          <span id="recommend-spinner" class="spinner-inline hidden">⟳</span>
         </button>
       </div>
-
-      <!-- Supported platforms hint -->
-      <p class="url-input__hint">
-        Supports: <strong>amazon.in</strong> · <strong>flipkart.com</strong>
-      </p>
-    </div>
-    <div class="hero__graphic">
-      <img src="assets/images/pop_art_hero.png" alt="Futuristic Pop Art Chair" class="hero__image" />
     </div>
   </section>
 
-  <!-- =====================================================================
-    LOADING SPINNER
-    Umar: Show this while any API call is in progress.
-    app.js toggles the .hidden class on this element.
-    Default state: hidden.
-  ====================================================================== -->
-  <div id="loading-spinner" class="spinner hidden" aria-live="polite" aria-label="Loading">
-    <!-- Umar: Add spinner animation markup here (CSS-only is fine) -->
-    <div class="spinner__circle"></div>
-    <p class="spinner__text">Fetching product data…</p>
-  </div>
-
-  <!-- =====================================================================
-    ERROR MESSAGE
-    Umar: Displays when extractProduct or getPrices fails.
-    app.js sets the text content and removes .hidden.
-    Default state: hidden.
-  ====================================================================== -->
+  <!-- ================================================================
+    ERROR
+  ================================================================ -->
   <div id="error-message" class="error-message hidden" role="alert">
-    <span class="error-message__icon">⚠️</span>
-    <span id="error-text" class="error-message__text">
-      <!-- app.js fills this text dynamically -->
-    </span>
+    <span>⚠️</span>
+    <span id="error-text"></span>
   </div>
 
-  <!-- =====================================================================
-    PRODUCT CARD
-    Umar: Rendered by displayProduct() in app.js after a successful fetch.
-    app.js populates all child elements via DOM manipulation.
-    Default state: hidden (app.js removes .hidden when data arrives).
+  <!-- ================================================================
+    RESULTS
+  ================================================================ -->
+  <section class="results hidden" id="results">
+    <div class="results__header">
+      <h2 class="results__title" id="results-title">Top picks for your room</h2>
+      <p class="results__subtitle" id="results-subtitle"></p>
+    </div>
+    <div class="products-grid" id="products-grid">
+      <!-- product cards injected by app.js -->
+    </div>
+  </section>
 
-    Child elements app.js will populate:
-    - #product-name    → product.name
-    - #product-image   → product.imageUrl (as <img> src)
-    - #product-price   → product.originalPrice (formatted as ₹XX,XXX)
-    - #product-category → product.category (as a badge)
-    - #product-platform → product.platform
-    - #product-dimensions → product.dimensions.raw
-    - #view-ar-btn     → triggers initARViewer() call in app.js
-  ====================================================================== -->
-  <div class="results-container">
-    <!-- =====================================================================
-      PRODUCT CARD
-    ====================================================================== -->
-    <section id="product-card" class="product-card hidden">
-      <div class="product-card__image-wrapper">
-        <img id="product-image" class="product-card__image" src="" alt="Product image" />
-        <span id="product-category" class="product-card__category-badge"></span>
+  <!-- ================================================================
+    AR MODAL
+  ================================================================ -->
+  <div class="ar-modal hidden" id="ar-modal">
+    <div class="ar-modal__backdrop" onclick="closeARModal()"></div>
+    <div class="ar-modal__panel">
+      <div class="ar-modal__header">
+        <h3 class="ar-modal__title" id="ar-modal-title">View in AR</h3>
+        <button class="ar-modal__close" onclick="closeARModal()">✕</button>
       </div>
-      <div class="product-card__details">
-        <h2 id="product-name" class="product-card__name"></h2>
-        <p id="product-platform" class="product-card__platform"></p>
-        <p id="product-price" class="product-card__price"></p>
-        <p id="product-dimensions" class="product-card__dimensions"></p>
-        <button id="view-ar-btn" class="btn-ar" type="button">
-          📱 View in Your Room (AR)
-        </button>
+      <div class="ar-modal__viewer" id="ar-container">
+        <!-- model-viewer injected here by ar-engine.js -->
       </div>
-    </section>
-
-    <!-- =====================================================================
-      PRICE COMPARISON PANEL
-    ====================================================================== -->
-    <section id="price-panel" class="price-panel hidden">
-      <h3 class="price-panel__title">Price Comparison</h3>
-      <ul id="price-list" class="price-panel__list">
-      </ul>
-    </section>
+      <div class="ar-modal__info" id="ar-modal-info"></div>
+      <a class="btn-buy" id="ar-buy-btn" href="#" target="_blank" rel="noopener">🛒 Buy Now</a>
+    </div>
   </div>
 
-  <!-- =====================================================================
-    AR CONTAINER
-    Atul: This is where initARViewer() from ar-engine.js injects the
-    <model-viewer> element. Do NOT put anything inside this div by hand.
-    Umar: Style the wrapper with .ar-container class.
-    Default state: hidden (app.js removes .hidden when AR is ready).
-  ====================================================================== -->
-  <div id="ar-container" class="ar-container hidden">
-    <!-- ar-engine.js injects <model-viewer> here at runtime -->
-  </div>
-
-  <!-- =====================================================================
-    FOOTER
-    Umar: Simple footer with team credit and project name.
-  ====================================================================== -->
+  <!-- FOOTER -->
   <footer class="footer">
-    <p class="footer__text">
-      TRIVERSE · Built by <strong>CyberKnights</strong> · Umar · Atul · Shoaib · Dhruv
-    </p>
+    <p>TRIVERSE · Built by <strong>CyberKnights</strong> · Umar · Atul · Shoaib · Dhruv</p>
   </footer>
 
-  <!-- =====================================================================
-    APP SCRIPT
-    Loaded as a module so it can use ES module imports (import/export).
-    Must be at the bottom of <body> so all DOM elements above are loaded first.
-  ====================================================================== -->
-  <!-- shared/config.js must load before app.js — it populates window globals -->
-  <script src="../shared/config.js"></script>
-  <script type="module" src="app.js"></script>
+  <!-- Scripts: shared files load before app.js -->
+  <script src="/shared/config.js"></script>
+  <script src="/shared/productCatalog.js"></script>
+  <script src="/shared/roomPresets.js"></script>
+  <script type="module" src="/frontend/app.js"></script>
 
 </body>
 </html>

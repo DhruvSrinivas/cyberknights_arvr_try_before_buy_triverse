@@ -1,17 +1,26 @@
 {
   "hosting": {
-    "public": "../frontend",
+    "public": "..",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "backend/functions/**",
+      "data-service/**",
+      "backend/firebase-debug*"
+    ],
+    "rewrites": [
+      {
+        "source": "/",
+        "destination": "/frontend/index.html"
+      }
     ],
     "headers": [
       {
         "source": "**",
         "headers": [
-          { "key": "X-Frame-Options",     "value": "SAMEORIGIN" },
-          { "key": "X-Content-Type-Options", "value": "nosniff" }
+          { "key": "X-Frame-Options",        "value": "SAMEORIGIN" },
+          { "key": "X-Content-Type-Options",  "value": "nosniff" }
         ]
       }
     ]

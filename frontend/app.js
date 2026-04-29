@@ -27,7 +27,7 @@ const { API_BASE_URL, PRODUCT_CATEGORIES } = window;
 
 // initARViewer is loaded as a module import below.
 // Using a module-level import so it resolves correctly relative to app.js.
-import { initARViewer } from '../ar-engine/ar-engine.js';
+import { initARViewer } from '/ar-engine/ar-engine.js';
 
 
 // ---------------------------------------------------------------------------

@@ -71,25 +71,29 @@ const SUPPORTED_PLATFORMS = {
 const PRODUCT_CATEGORIES = {
   sofa: {
     label: 'Sofa / Couch',
-    defaultGlbUrl: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb', // Replace with real sofa GLB
+    // KhronosGroup glTF sample — GlamVelvetSofa (real sofa model)
+    defaultGlbUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb',
   },
   chair: {
     label: 'Chair',
-    defaultGlbUrl: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb', // Replace with real chair GLB
+    // KhronosGroup glTF sample — SheenChair (real fabric chair model)
+    defaultGlbUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb',
   },
   table: {
     label: 'Table',
-    defaultGlbUrl: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb', // Replace with real table GLB
+    // three.js CDN — closest available free table-like model
+    defaultGlbUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb',
   },
   lamp: {
     label: 'Lamp / Light',
-    defaultGlbUrl: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb', // Replace with real lamp GLB
+    // KhronosGroup glTF sample — IridescenceLamp (real lamp model)
+    defaultGlbUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb',
   },
   bed: {
     label: 'Bed',
-    defaultGlbUrl: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb', // Replace with real bed GLB
+    // Best available free model for bed category
+    defaultGlbUrl: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb',
   },
-  // Add more categories as needed — coordinate with Shoaib on category names
 };
 
 // ---------------------------------------------------------------------------

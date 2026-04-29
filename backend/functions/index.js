@@ -24,9 +24,10 @@
 // IMPORTS
 // ---------------------------------------------------------------------------
 const { onRequest } = require('firebase-functions/v2/https');
-const admin         = require('firebase-admin');
-const cors          = require('cors');
-const md5           = require('md5');
+const admin          = require('firebase-admin');
+const { FieldValue } = require('firebase-admin/firestore');
+const cors           = require('cors');
+const md5            = require('md5');
 
 // Data-service modules (Shoaib's code).
 // Path: functions/ → ../../ → triverse/data-service/
@@ -168,7 +169,7 @@ async function setCachedDoc(collection, docId, data) {
   const docRef = db.collection(collection).doc(docId);
   await docRef.set({
     ...data,
-    fetchedAt: admin.firestore.FieldValue.serverTimestamp(),
+    fetchedAt: FieldValue.serverTimestamp(),
   });
 }
 
