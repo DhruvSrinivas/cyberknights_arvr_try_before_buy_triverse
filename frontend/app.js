@@ -408,16 +408,24 @@ window.closeARModal = function() {
   currentARProduct = null;
 };
 
-// Handle Color Picker
-document.getElementById('color-swatches')?.addEventListener('click', (e) => {
+// Handle Color Picker (Material API)
+document.getElementById('color-swatches')?.addEventListener('click', async (e) => {
   if (e.target.classList.contains('color-swatch')) {
     document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
     e.target.classList.add('selected');
     
-    const filter = e.target.getAttribute('data-filter') || '';
+    const colorStr = e.target.getAttribute('data-color-rgb');
+    if (!colorStr) return;
+    const rgba = JSON.parse(colorStr);
+    
     const viewer = document.querySelector('model-viewer');
-    if (viewer) {
-      viewer.style.filter = filter;
+    if (viewer && viewer.model && viewer.model.materials && viewer.model.materials.length > 0) {
+      // Loop through materials and change base color
+      viewer.model.materials.forEach(mat => {
+        if (mat.pbrMetallicRoughness) {
+          mat.pbrMetallicRoughness.setBaseColorFactor(rgba);
+        }
+      });
     }
   }
 });
