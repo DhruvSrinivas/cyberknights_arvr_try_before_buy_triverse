@@ -1,280 +1,564 @@
 /**
  * shared/productCatalog.js — TRIVERSE Product Preset Catalog
- * 20 furniture products used by the ML recommendation engine.
- * All GLBs are from KhronosGroup sample models (free, public).
+ * 20 products used by the ML recommendation engine.
  * Dual export: CommonJS (backend) + browser global (frontend).
  */
 
-const GLB = {
-  sofa:  'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb',
-  chair: 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb',
-  lamp:  'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb',
-  misc:  'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb',
-};
-
 const PRODUCT_CATALOG = [
   {
-    id: 'sofa-modern-01',
-    name: 'Wakefit Orthopaedic 3-Seater Sofa',
-    category: 'sofa', styles: ['modern', 'minimalist'],
-    roomTypes: ['living', 'studio'],
-    price_inr: 24999,
-    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Wakefit%20Orthopaedic%203-Seater%20Sofa',
-    glbUrl: GLB.sofa,
-    dimensions: { lengthCm: 210, widthCm: 85, heightCm: 90 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=wakefit+sofa',
-    tags: ['3-seater', 'fabric', 'orthopedic'],
+    "id": "furn-01",
+    "name": "Modern Velvet 3-Seater Sofa",
+    "category": "furniture",
+    "styles": [
+      "modern",
+      "minimalist"
+    ],
+    "roomTypes": [
+      "living",
+      "studio"
+    ],
+    "price_inr": 28999,
+    "imageUrl": "https://placehold.co/600x400/0B7A75/FFFFFF?text=Modern+Velvet+3-Seater+Sofa",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
+    "dimensions": {
+      "lengthCm": 210,
+      "widthCm": 85,
+      "heightCm": 90
+    },
+    "platform": "Amazon",
+    "buyUrl": "#",
+    "tags": [
+      "sofa",
+      "velvet",
+      "3-seater"
+    ]
   },
   {
-    id: 'sofa-compact-02',
-    name: 'Urban Ladder 2-Seater Loveseat',
-    category: 'sofa', styles: ['modern', 'scandinavian'],
-    roomTypes: ['living', 'studio', 'bedroom'],
-    price_inr: 15999,
-    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Urban%20Ladder%202-Seater%20Loveseat',
-    glbUrl: GLB.sofa,
-    dimensions: { lengthCm: 150, widthCm: 80, heightCm: 85 },
-    platform: 'Flipkart',
-    buyUrl: 'https://www.flipkart.com/search?q=2+seater+sofa',
-    tags: ['2-seater', 'compact', 'loveseat'],
+    "id": "furn-02",
+    "name": "Scandinavian Accent Chair",
+    "category": "furniture",
+    "styles": [
+      "scandinavian",
+      "minimalist"
+    ],
+    "roomTypes": [
+      "living",
+      "bedroom"
+    ],
+    "price_inr": 8500,
+    "imageUrl": "https://placehold.co/600x400/0B7A75/FFFFFF?text=Scandinavian+Accent+Chair",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb",
+    "dimensions": {
+      "lengthCm": 70,
+      "widthCm": 70,
+      "heightCm": 85
+    },
+    "platform": "Flipkart",
+    "buyUrl": "#",
+    "tags": [
+      "chair",
+      "accent"
+    ]
   },
   {
-    id: 'sofa-luxury-03',
-    name: 'Nilkamal L-Shaped Corner Sofa',
-    category: 'sofa', styles: ['modern', 'traditional'],
-    roomTypes: ['living'],
-    price_inr: 54999,
-    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Nilkamal%20L-Shaped%20Corner%20Sofa',
-    glbUrl: GLB.sofa,
-    dimensions: { lengthCm: 280, widthCm: 180, heightCm: 90 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=l+shaped+sofa',
-    tags: ['l-shaped', 'corner', 'premium'],
+    "id": "furn-03",
+    "name": "Industrial Wooden Coffee Table",
+    "category": "furniture",
+    "styles": [
+      "industrial",
+      "modern"
+    ],
+    "roomTypes": [
+      "living"
+    ],
+    "price_inr": 6500,
+    "imageUrl": "https://placehold.co/600x400/0B7A75/FFFFFF?text=Industrial+Wooden+Coffee+Table",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
+    "dimensions": {
+      "lengthCm": 120,
+      "widthCm": 60,
+      "heightCm": 45
+    },
+    "platform": "UrbanLadder",
+    "buyUrl": "#",
+    "tags": [
+      "table",
+      "coffee table"
+    ]
   },
   {
-    id: 'chair-accent-04',
-    name: 'Featherlite Accent Arm Chair',
-    category: 'chair', styles: ['modern', 'scandinavian', 'minimalist'],
-    roomTypes: ['living', 'bedroom', 'study'],
-    price_inr: 8999,
-    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Featherlite%20Accent%20Arm%20Chair',
-    glbUrl: GLB.chair,
-    dimensions: { lengthCm: 70, widthCm: 70, heightCm: 85 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=accent+chair',
-    tags: ['accent', 'arm-chair', 'fabric'],
+    "id": "furn-04",
+    "name": "Bohemian Rattan Bed Frame",
+    "category": "furniture",
+    "styles": [
+      "bohemian"
+    ],
+    "roomTypes": [
+      "bedroom"
+    ],
+    "price_inr": 32000,
+    "imageUrl": "https://placehold.co/600x400/0B7A75/FFFFFF?text=Bohemian+Rattan+Bed+Frame",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
+    "dimensions": {
+      "lengthCm": 200,
+      "widthCm": 180,
+      "heightCm": 110
+    },
+    "platform": "Amazon",
+    "buyUrl": "#",
+    "tags": [
+      "bed",
+      "rattan",
+      "queen"
+    ]
   },
   {
-    id: 'chair-recliner-05',
-    name: 'Durian Recliner Lounge Chair',
-    category: 'chair', styles: ['traditional', 'modern'],
-    roomTypes: ['living', 'bedroom'],
-    price_inr: 22999,
-    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Durian%20Recliner%20Lounge%20Chair',
-    glbUrl: GLB.chair,
-    dimensions: { lengthCm: 90, widthCm: 85, heightCm: 100 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=recliner+chair',
-    tags: ['recliner', 'lounge', 'premium'],
+    "id": "furn-05",
+    "name": "Traditional Bookshelf",
+    "category": "furniture",
+    "styles": [
+      "traditional"
+    ],
+    "roomTypes": [
+      "study",
+      "living"
+    ],
+    "price_inr": 12000,
+    "imageUrl": "https://placehold.co/600x400/0B7A75/FFFFFF?text=Traditional+Bookshelf",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb",
+    "dimensions": {
+      "lengthCm": 80,
+      "widthCm": 35,
+      "heightCm": 180
+    },
+    "platform": "Pepperfry",
+    "buyUrl": "#",
+    "tags": [
+      "shelf",
+      "storage"
+    ]
   },
   {
-    id: 'chair-study-06',
-    name: 'Green Soul Ergonomic Study Chair',
-    category: 'chair', styles: ['minimalist', 'modern', 'industrial'],
-    roomTypes: ['study'],
-    price_inr: 6999,
-    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Green%20Soul%20Ergonomic%20Study%20Chair',
-    glbUrl: GLB.chair,
-    dimensions: { lengthCm: 60, widthCm: 60, heightCm: 110 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=ergonomic+chair',
-    tags: ['ergonomic', 'study', 'office'],
+    "id": "plant-01",
+    "name": "Large Indoor Monstera Plant",
+    "category": "plants",
+    "styles": [
+      "bohemian",
+      "modern",
+      "minimalist"
+    ],
+    "roomTypes": [
+      "living",
+      "bedroom",
+      "study",
+      "studio"
+    ],
+    "price_inr": 1500,
+    "imageUrl": "https://placehold.co/600x400/2D6A4F/FFFFFF?text=Large+Indoor+Monstera",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": {
+      "lengthCm": 50,
+      "widthCm": 50,
+      "heightCm": 120
+    },
+    "platform": "Ugaoo",
+    "buyUrl": "#",
+    "tags": [
+      "plant",
+      "indoor",
+      "monstera"
+    ]
   },
   {
-    id: 'table-center-07',
-    name: 'Wooden Street Sheesham Center Table',
-    category: 'table', styles: ['traditional', 'bohemian', 'modern'],
-    roomTypes: ['living'],
-    price_inr: 9999,
-    imageUrl: 'https://placehold.co/600x400/0B7A75/FFFFFF?text=Wooden%20Street%20Sheesham%20Center%20Table',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 120, widthCm: 60, heightCm: 45 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=center+table+wood',
-    tags: ['wood', 'center-table', 'sheesham'],
+    "id": "plant-02",
+    "name": "Fiddle Leaf Fig in Ceramic Pot",
+    "category": "plants",
+    "styles": [
+      "scandinavian",
+      "modern"
+    ],
+    "roomTypes": [
+      "living",
+      "studio"
+    ],
+    "price_inr": 2200,
+    "imageUrl": "https://placehold.co/600x400/2D6A4F/FFFFFF?text=Fiddle+Leaf+Fig",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": {
+      "lengthCm": 45,
+      "widthCm": 45,
+      "heightCm": 150
+    },
+    "platform": "Amazon",
+    "buyUrl": "#",
+    "tags": [
+      "plant",
+      "tall",
+      "fig"
+    ]
   },
   {
-    id: 'table-dining-08',
-    name: 'Godrej Interio 6-Seater Dining Table',
-    category: 'table', styles: ['modern', 'minimalist'],
-    roomTypes: ['dining'],
-    price_inr: 32999,
-    imageUrl: 'https://picsum.photos/seed/table2/400/280',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 180, widthCm: 90, heightCm: 75 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=dining+table+6+seater',
-    tags: ['dining', '6-seater', 'wood'],
+    "id": "plant-03",
+    "name": "Snake Plant Set",
+    "category": "plants",
+    "styles": [
+      "industrial",
+      "minimalist"
+    ],
+    "roomTypes": [
+      "bedroom",
+      "study"
+    ],
+    "price_inr": 800,
+    "imageUrl": "https://placehold.co/600x400/2D6A4F/FFFFFF?text=Snake+Plant+Set",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": {
+      "lengthCm": 20,
+      "widthCm": 20,
+      "heightCm": 60
+    },
+    "platform": "NurseryLive",
+    "buyUrl": "#",
+    "tags": [
+      "plant",
+      "air-purifying"
+    ]
   },
   {
-    id: 'table-study-09',
-    name: 'Zuari Height-Adjustable Study Desk',
-    category: 'table', styles: ['minimalist', 'modern', 'industrial'],
-    roomTypes: ['study', 'kids'],
-    price_inr: 12999,
-    imageUrl: 'https://picsum.photos/seed/table3/400/280',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 120, widthCm: 60, heightCm: 75 },
-    platform: 'Flipkart',
-    buyUrl: 'https://www.flipkart.com/search?q=study+desk',
-    tags: ['desk', 'height-adjustable', 'study'],
+    "id": "plant-04",
+    "name": "Hanging Pothos Basket",
+    "category": "plants",
+    "styles": [
+      "bohemian"
+    ],
+    "roomTypes": [
+      "living",
+      "kitchen",
+      "balcony"
+    ],
+    "price_inr": 650,
+    "imageUrl": "https://placehold.co/600x400/2D6A4F/FFFFFF?text=Hanging+Pothos",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": {
+      "lengthCm": 30,
+      "widthCm": 30,
+      "heightCm": 100
+    },
+    "platform": "Ugaoo",
+    "buyUrl": "#",
+    "tags": [
+      "plant",
+      "hanging"
+    ]
   },
   {
-    id: 'table-side-10',
-    name: 'Pepperfry Bedside Table with Drawer',
-    category: 'table', styles: ['modern', 'minimalist', 'scandinavian'],
-    roomTypes: ['bedroom', 'any'],
-    price_inr: 3999,
-    imageUrl: 'https://picsum.photos/seed/table4/400/280',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 45, widthCm: 40, heightCm: 55 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=bedside+table',
-    tags: ['bedside', 'drawer', 'compact'],
+    "id": "plant-05",
+    "name": "Bonsai Tree Desk Plant",
+    "category": "plants",
+    "styles": [
+      "traditional",
+      "minimalist"
+    ],
+    "roomTypes": [
+      "study",
+      "office"
+    ],
+    "price_inr": 3000,
+    "imageUrl": "https://placehold.co/600x400/2D6A4F/FFFFFF?text=Bonsai+Tree",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": {
+      "lengthCm": 35,
+      "widthCm": 25,
+      "heightCm": 40
+    },
+    "platform": "Amazon",
+    "buyUrl": "#",
+    "tags": [
+      "plant",
+      "bonsai",
+      "desk"
+    ]
   },
   {
-    id: 'lamp-floor-11',
-    name: 'Solimo Floor Lamp with Tripod',
-    category: 'lamp', styles: ['modern', 'industrial', 'scandinavian'],
-    roomTypes: ['living', 'bedroom', 'study'],
-    price_inr: 3499,
-    imageUrl: 'https://picsum.photos/seed/lamp1/400/280',
-    glbUrl: GLB.lamp,
-    dimensions: { lengthCm: 40, widthCm: 40, heightCm: 150 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=floor+lamp+tripod',
-    tags: ['floor-lamp', 'tripod', 'ambient'],
+    "id": "decor-01",
+    "name": "Abstract Canvas Wall Art",
+    "category": "decoration",
+    "styles": [
+      "modern",
+      "minimalist"
+    ],
+    "roomTypes": [
+      "living",
+      "bedroom"
+    ],
+    "price_inr": 4500,
+    "imageUrl": "https://placehold.co/600x400/C05A3A/FFFFFF?text=Abstract+Canvas+Art",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb",
+    "dimensions": {
+      "lengthCm": 120,
+      "widthCm": 5,
+      "heightCm": 80
+    },
+    "platform": "Flipkart",
+    "buyUrl": "#",
+    "tags": [
+      "art",
+      "wall",
+      "canvas"
+    ]
   },
   {
-    id: 'lamp-pendant-12',
-    name: 'Craftter Rattan Pendant Lamp',
-    category: 'lamp', styles: ['bohemian', 'traditional', 'industrial'],
-    roomTypes: ['dining', 'living', 'study'],
-    price_inr: 4999,
-    imageUrl: 'https://picsum.photos/seed/lamp2/400/280',
-    glbUrl: GLB.lamp,
-    dimensions: { lengthCm: 40, widthCm: 40, heightCm: 60 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=rattan+pendant+lamp',
-    tags: ['pendant', 'rattan', 'bohemian'],
+    "id": "decor-02",
+    "name": "Macrame Wall Hanging",
+    "category": "decoration",
+    "styles": [
+      "bohemian"
+    ],
+    "roomTypes": [
+      "bedroom",
+      "studio"
+    ],
+    "price_inr": 1200,
+    "imageUrl": "https://placehold.co/600x400/C05A3A/FFFFFF?text=Macrame+Wall+Hanging",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb",
+    "dimensions": {
+      "lengthCm": 50,
+      "widthCm": 2,
+      "heightCm": 90
+    },
+    "platform": "Amazon",
+    "buyUrl": "#",
+    "tags": [
+      "decor",
+      "macrame",
+      "handmade"
+    ]
   },
   {
-    id: 'bed-queen-13',
-    name: 'Wakefit Queen Bed with Storage',
-    category: 'bed', styles: ['modern', 'minimalist'],
-    roomTypes: ['bedroom'],
-    price_inr: 22999,
-    imageUrl: 'https://picsum.photos/seed/bed1/400/280',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 210, widthCm: 165, heightCm: 95 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=queen+bed+with+storage',
-    tags: ['queen', 'storage', 'hydraulic'],
+    "id": "decor-03",
+    "name": "Vintage Round Mirror",
+    "category": "decoration",
+    "styles": [
+      "traditional",
+      "industrial"
+    ],
+    "roomTypes": [
+      "living",
+      "hallway"
+    ],
+    "price_inr": 3800,
+    "imageUrl": "https://placehold.co/600x400/C05A3A/FFFFFF?text=Vintage+Round+Mirror",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb",
+    "dimensions": {
+      "lengthCm": 80,
+      "widthCm": 5,
+      "heightCm": 80
+    },
+    "platform": "Pepperfry",
+    "buyUrl": "#",
+    "tags": [
+      "mirror",
+      "wall"
+    ]
   },
   {
-    id: 'bed-single-14',
-    name: 'Nilkamal Single Bed with Drawer',
-    category: 'bed', styles: ['minimalist', 'scandinavian'],
-    roomTypes: ['bedroom', 'kids'],
-    price_inr: 12999,
-    imageUrl: 'https://picsum.photos/seed/bed2/400/280',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 200, widthCm: 110, heightCm: 85 },
-    platform: 'Flipkart',
-    buyUrl: 'https://www.flipkart.com/search?q=single+bed',
-    tags: ['single', 'drawer', 'wood'],
+    "id": "decor-04",
+    "name": "Geometric Pattern Rug",
+    "category": "decoration",
+    "styles": [
+      "scandinavian",
+      "modern"
+    ],
+    "roomTypes": [
+      "living",
+      "bedroom"
+    ],
+    "price_inr": 5999,
+    "imageUrl": "https://placehold.co/600x400/C05A3A/FFFFFF?text=Geometric+Rug",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb",
+    "dimensions": {
+      "lengthCm": 180,
+      "widthCm": 120,
+      "heightCm": 2
+    },
+    "platform": "Amazon",
+    "buyUrl": "#",
+    "tags": [
+      "rug",
+      "floor",
+      "geometric"
+    ]
   },
   {
-    id: 'storage-shelf-15',
-    name: 'Bluewud 5-Tier Bookshelf',
-    category: 'storage', styles: ['scandinavian', 'minimalist', 'modern'],
-    roomTypes: ['study', 'living', 'any'],
-    price_inr: 7999,
-    imageUrl: 'https://picsum.photos/seed/shelf1/400/280',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 60, widthCm: 30, heightCm: 180 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=bookshelf+5+tier',
-    tags: ['bookshelf', '5-tier', 'display'],
+    "id": "decor-05",
+    "name": "Ceramic Vase Set",
+    "category": "decoration",
+    "styles": [
+      "minimalist",
+      "bohemian"
+    ],
+    "roomTypes": [
+      "living",
+      "dining"
+    ],
+    "price_inr": 2100,
+    "imageUrl": "https://placehold.co/600x400/C05A3A/FFFFFF?text=Ceramic+Vase+Set",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": {
+      "lengthCm": 15,
+      "widthCm": 15,
+      "heightCm": 30
+    },
+    "platform": "Flipkart",
+    "buyUrl": "#",
+    "tags": [
+      "vase",
+      "ceramic",
+      "tabletop"
+    ]
   },
   {
-    id: 'storage-wardrobe-16',
-    name: 'Godrej Slimline 3-Door Wardrobe',
-    category: 'storage', styles: ['modern', 'minimalist'],
-    roomTypes: ['bedroom'],
-    price_inr: 28999,
-    imageUrl: 'https://picsum.photos/seed/wardrobe1/400/280',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 150, widthCm: 55, heightCm: 195 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=3+door+wardrobe',
-    tags: ['wardrobe', '3-door', 'mirror'],
+    "id": "item-01",
+    "name": "Minimalist Floor Lamp",
+    "category": "items",
+    "styles": [
+      "minimalist",
+      "modern"
+    ],
+    "roomTypes": [
+      "living",
+      "studio"
+    ],
+    "price_inr": 4999,
+    "imageUrl": "https://placehold.co/600x400/F0EDE8/000000?text=Minimalist+Floor+Lamp",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": {
+      "lengthCm": 30,
+      "widthCm": 30,
+      "heightCm": 160
+    },
+    "platform": "Amazon",
+    "buyUrl": "#",
+    "tags": [
+      "lamp",
+      "lighting",
+      "floor"
+    ]
   },
   {
-    id: 'storage-tv-17',
-    name: 'Wooden Street TV Unit with Shelves',
-    category: 'storage', styles: ['modern', 'industrial'],
-    roomTypes: ['living'],
-    price_inr: 15999,
-    imageUrl: 'https://picsum.photos/seed/tvunit1/400/280',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 150, widthCm: 40, heightCm: 55 },
-    platform: 'Flipkart',
-    buyUrl: 'https://www.flipkart.com/search?q=tv+unit',
-    tags: ['tv-unit', 'shelves', 'wood'],
+    "id": "item-02",
+    "name": "Industrial Pendant Light",
+    "category": "items",
+    "styles": [
+      "industrial"
+    ],
+    "roomTypes": [
+      "dining",
+      "kitchen"
+    ],
+    "price_inr": 2500,
+    "imageUrl": "https://placehold.co/600x400/F0EDE8/000000?text=Pendant+Light",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": {
+      "lengthCm": 25,
+      "widthCm": 25,
+      "heightCm": 40
+    },
+    "platform": "Flipkart",
+    "buyUrl": "#",
+    "tags": [
+      "light",
+      "ceiling",
+      "industrial"
+    ]
   },
   {
-    id: 'decor-ottoman-18',
-    name: 'Solimo Round Fabric Ottoman',
-    category: 'decor', styles: ['bohemian', 'modern', 'traditional'],
-    roomTypes: ['living', 'bedroom', 'any'],
-    price_inr: 2999,
-    imageUrl: 'https://picsum.photos/seed/ottoman1/400/280',
-    glbUrl: GLB.chair,
-    dimensions: { lengthCm: 50, widthCm: 50, heightCm: 40 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=round+ottoman',
-    tags: ['ottoman', 'round', 'fabric'],
+    "id": "item-03",
+    "name": "Smart Desk Organizer",
+    "category": "items",
+    "styles": [
+      "modern",
+      "minimalist"
+    ],
+    "roomTypes": [
+      "study",
+      "office"
+    ],
+    "price_inr": 1500,
+    "imageUrl": "https://placehold.co/600x400/F0EDE8/000000?text=Desk+Organizer",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": {
+      "lengthCm": 30,
+      "widthCm": 15,
+      "heightCm": 10
+    },
+    "platform": "Amazon",
+    "buyUrl": "#",
+    "tags": [
+      "organizer",
+      "desk",
+      "smart"
+    ]
   },
   {
-    id: 'decor-plant-19',
-    name: 'Decorative Bamboo Plant Stand',
-    category: 'decor', styles: ['bohemian', 'scandinavian', 'minimalist'],
-    roomTypes: ['balcony', 'living', 'any'],
-    price_inr: 1999,
-    imageUrl: 'https://picsum.photos/seed/plant1/400/280',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 40, widthCm: 40, heightCm: 90 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=plant+stand+bamboo',
-    tags: ['plant-stand', 'bamboo', 'decor'],
+    "id": "item-04",
+    "name": "Boho Floor Cushions (Set of 2)",
+    "category": "items",
+    "styles": [
+      "bohemian"
+    ],
+    "roomTypes": [
+      "living",
+      "bedroom",
+      "studio"
+    ],
+    "price_inr": 3200,
+    "imageUrl": "https://placehold.co/600x400/F0EDE8/000000?text=Floor+Cushions",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/SheenChair/glTF-Binary/SheenChair.glb",
+    "dimensions": {
+      "lengthCm": 60,
+      "widthCm": 60,
+      "heightCm": 15
+    },
+    "platform": "UrbanLadder",
+    "buyUrl": "#",
+    "tags": [
+      "cushion",
+      "seating",
+      "boho"
+    ]
   },
   {
-    id: 'decor-wall-shelf-20',
-    name: 'Ferns N Petals Floating Wall Shelf Set',
-    category: 'storage', styles: ['modern', 'minimalist', 'industrial'],
-    roomTypes: ['any'],
-    price_inr: 3499,
-    imageUrl: 'https://picsum.photos/seed/wallshelf1/400/280',
-    glbUrl: GLB.misc,
-    dimensions: { lengthCm: 60, widthCm: 20, heightCm: 15 },
-    platform: 'Amazon India',
-    buyUrl: 'https://www.amazon.in/s?k=floating+wall+shelf',
-    tags: ['wall-shelf', 'floating', 'set'],
-  },
+    "id": "item-05",
+    "name": "Classic Table Clock",
+    "category": "items",
+    "styles": [
+      "traditional",
+      "industrial"
+    ],
+    "roomTypes": [
+      "study",
+      "bedroom"
+    ],
+    "price_inr": 900,
+    "imageUrl": "https://placehold.co/600x400/F0EDE8/000000?text=Table+Clock",
+    "glbUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/IridescenceLamp/glTF-Binary/IridescenceLamp.glb",
+    "dimensions": {
+      "lengthCm": 15,
+      "widthCm": 8,
+      "heightCm": 15
+    },
+    "platform": "Amazon",
+    "buyUrl": "#",
+    "tags": [
+      "clock",
+      "tabletop",
+      "vintage"
+    ]
+  }
 ];
 
+// Export setup
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { PRODUCT_CATALOG };
 } else if (typeof window !== 'undefined') {
